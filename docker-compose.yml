@@ -72,3 +72,12 @@ services:
       # smoke-testing without going through Traefik. Comment out if you only
       # want Traefik to reach it.
       - "${OPENKPI_PORT:-3050}:3000"
+    # Override the Dockerfile's HEALTHCHECK so it doesn't trip on the / → /w/demo
+    # 307 redirect (wget exits 8 on 3xx without --max-redirect). Probe the
+    # final-destination page directly with --spider.
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:3000/w/demo"]
+      interval: 30s
+      timeout: 8s
+      retries: 3
+      start_period: 25s

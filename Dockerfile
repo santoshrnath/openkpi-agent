@@ -56,8 +56,10 @@ COPY --from=build /app/prisma ./prisma
 USER node
 EXPOSE 3000
 
-HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
-  CMD wget -qO- http://127.0.0.1:3000/ > /dev/null || exit 1
+# Probe the seeded demo page (final destination of the / → /w/demo redirect).
+# wget exits 8 on 3xx without --max-redirect, so --spider on the destination.
+HEALTHCHECK --interval=30s --timeout=8s --start-period=25s --retries=3 \
+  CMD wget -q --spider http://127.0.0.1:3000/w/demo || exit 1
 
 ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["node", "server.js"]
