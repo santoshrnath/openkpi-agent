@@ -55,6 +55,18 @@ services:
       - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY:-}
       - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT:-}
       - AZURE_OPENAI_DEPLOYMENT=${AZURE_OPENAI_DEPLOYMENT:-}
+      # ---- Database -----------------------------------------------------
+      - DATABASE_URL=${DATABASE_URL:-}
+      # ---- NextAuth -----------------------------------------------------
+      - NEXTAUTH_URL=${NEXTAUTH_URL:-https://openstudio.oneplaceplatform.com}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - EMAIL_SERVER_HOST=${EMAIL_SERVER_HOST:-}
+      - EMAIL_SERVER_PORT=${EMAIL_SERVER_PORT:-587}
+      - EMAIL_SERVER_USER=${EMAIL_SERVER_USER:-}
+      - EMAIL_SERVER_PASSWORD=${EMAIL_SERVER_PASSWORD:-}
+      - EMAIL_FROM=${EMAIL_FROM:-}
     ports:
       # Optional: also exposes the app on a direct host port. Handy for
       # smoke-testing without going through Traefik. Comment out if you only

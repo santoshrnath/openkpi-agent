@@ -11,15 +11,24 @@
 # ─── Stage 1: deps ───────────────────────────────────────────────────────
 FROM node:20-bookworm-slim AS deps
 WORKDIR /app
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json* ./
-RUN npm ci --include=dev
+COPY prisma ./prisma
+RUN npm ci --include=dev --legacy-peer-deps
+# Prisma client must be generated against the schema before next build.
+RUN npx prisma generate
 
 # ─── Stage 2: build ──────────────────────────────────────────────────────
 FROM node:20-bookworm-slim AS build
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
+RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
+RUN npx prisma generate
 RUN npm run build
 
 # ─── Stage 3: runtime ────────────────────────────────────────────────────
@@ -31,7 +40,7 @@ ENV NODE_ENV=production \
     HOSTNAME=0.0.0.0
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates dumb-init wget \
+    ca-certificates dumb-init wget openssl \
     && rm -rf /var/lib/apt/lists/*
 
 # Next.js standalone output is fully self-contained (server.js + minimum
@@ -39,6 +48,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY --from=build /app/public ./public
 COPY --from=build /app/.next/standalone ./
 COPY --from=build /app/.next/static ./.next/static
+# Prisma engine binary + schema for runtime migrations / queries.
+COPY --from=build /app/node_modules/.prisma ./node_modules/.prisma
+COPY --from=build /app/node_modules/@prisma/client ./node_modules/@prisma/client
+COPY --from=build /app/prisma ./prisma
 
 USER node
 EXPOSE 3000

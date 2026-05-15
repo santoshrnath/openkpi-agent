@@ -57,28 +57,65 @@ function ExplainerInner() {
     threadEnd.current?.scrollIntoView({ behavior: "smooth" });
   }, [thread]);
 
-  function send(question: string) {
+  const [pending, setPending] = useState(false);
+
+  async function send(question: string) {
     const q = question.trim();
-    if (!q || !kpi) return;
+    if (!q || !kpi || pending) return;
     const userMsg: AIMessage = {
       id: `u-${Date.now()}`,
       role: "user",
       content: q,
       createdAt: Date.now(),
     };
-    const ai = generateMockAIResponse(q, kpi);
-    const agentMsg: AIMessage = {
-      id: `a-${Date.now()}`,
-      role: "agent",
-      content: ai.answer,
-      sources: ai.sources,
-      confidence: ai.confidence,
-      assumptions: ai.assumptions,
-      followUps: ai.followUps,
-      createdAt: Date.now() + 1,
-    };
-    setThread((t) => [...t, userMsg, agentMsg]);
+    setThread((t) => [...t, userMsg]);
     setInput("");
+    setPending(true);
+
+    try {
+      const res = await fetch("/api/explain", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ kpiId: kpi.id, question: q }),
+      });
+
+      let ai;
+      if (res.ok) {
+        ai = await res.json();
+      } else {
+        // Server failed — fall back to deterministic mock so the demo still works.
+        ai = generateMockAIResponse(q, kpi);
+      }
+
+      const agentMsg: AIMessage = {
+        id: `a-${Date.now()}`,
+        role: "agent",
+        content: ai.answer,
+        sources: ai.sources,
+        confidence: ai.confidence,
+        assumptions: ai.assumptions,
+        followUps: ai.followUps,
+        createdAt: Date.now() + 1,
+      };
+      setThread((t) => [...t, agentMsg]);
+    } catch {
+      const fallback = generateMockAIResponse(q, kpi);
+      setThread((t) => [
+        ...t,
+        {
+          id: `a-${Date.now()}`,
+          role: "agent",
+          content: fallback.answer,
+          sources: fallback.sources,
+          confidence: fallback.confidence,
+          assumptions: fallback.assumptions,
+          followUps: fallback.followUps,
+          createdAt: Date.now() + 1,
+        },
+      ]);
+    } finally {
+      setPending(false);
+    }
   }
 
   return (
@@ -262,8 +299,8 @@ function ExplainerInner() {
             <button
               type="submit"
               className={styles.sendBtn}
-              disabled={!input.trim()}
-              title="Send"
+              disabled={!input.trim() || pending}
+              title={pending ? "Thinking…" : "Send"}
             >
               <Send size={16} />
             </button>
