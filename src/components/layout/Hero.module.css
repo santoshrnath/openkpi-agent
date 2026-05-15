@@ -1,0 +1,48 @@
+.hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgb(var(--accent-soft));
+  color: rgb(var(--accent));
+  margin-bottom: 14px;
+}
+
+.title {
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  color: rgb(var(--text));
+  font-weight: 700;
+}
+
+@media (min-width: 768px) {
+  .title { font-size: 32px; }
+}
+
+.sub {
+  margin-top: 6px;
+  color: rgb(var(--text-muted));
+  font-size: 14px;
+  max-width: 640px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}

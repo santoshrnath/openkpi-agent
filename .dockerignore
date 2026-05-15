@@ -1,0 +1,17 @@
+node_modules
+.next
+out
+.git
+.gitignore
+.env
+.env.local
+.env*.local
+.vscode
+.idea
+*.log
+docs/screenshots/*.png
+README.md
+docs/
+LICENSE
+.dockerignore
+.eslintrc.json

@@ -1,0 +1,41 @@
+.wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.dial {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  flex-shrink: 0;
+}
+.val {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: rgb(var(--text));
+}
+.copy {
+  flex: 1;
+}
+.label {
+  font-size: 12px;
+  color: rgb(var(--text-muted));
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.title {
+  font-weight: 600;
+  margin-top: 2px;
+  color: rgb(var(--text));
+}
+.note {
+  font-size: 12px;
+  color: rgb(var(--text-soft));
+  margin-top: 6px;
+  line-height: 1.5;
+}

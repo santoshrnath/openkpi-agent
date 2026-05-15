@@ -1,0 +1,62 @@
+# =============================================================================
+# OpenKPI Studio — production compose
+# =============================================================================
+# Runs on Hetzner. Routed by the shared Coolify-managed Traefik proxy via the
+# external `coolify` network and Traefik labels.
+#
+# Required env (in .env alongside this file on the server):
+#   ANTHROPIC_API_KEY        — used when OPENKPI_AI_PROVIDER=anthropic
+#   (optional)  OPENAI_API_KEY, AZURE_OPENAI_*
+#
+# Optional env:
+#   OPENKPI_PORT     — host port (default 3050)
+#   PUBLIC_HOSTNAME  — domain (default openstudio.oneplaceplatform.com)
+#   TRAEFIK_NETWORK  — Coolify Traefik network name (default coolify)
+# =============================================================================
+
+networks:
+  default:
+    name: openkpi
+  coolify:
+    external: true
+    name: ${TRAEFIK_NETWORK:-coolify}
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: openkpi-studio:latest
+    container_name: openkpi-studio-app
+    restart: unless-stopped
+    networks:
+      - default
+      - coolify
+    labels:
+      # Traefik routing (Coolify-managed). Routes https://${PUBLIC_HOSTNAME}
+      # → this container on internal port 3000. Cert via Let's Encrypt.
+      - traefik.enable=true
+      - traefik.docker.network=coolify
+      - traefik.http.routers.openkpi-http.entryPoints=http
+      - traefik.http.routers.openkpi-http.rule=Host(`${PUBLIC_HOSTNAME:-openstudio.oneplaceplatform.com}`)
+      - traefik.http.routers.openkpi-http.middlewares=redirect-to-https
+      - traefik.http.routers.openkpi-https.entryPoints=https
+      - traefik.http.routers.openkpi-https.rule=Host(`${PUBLIC_HOSTNAME:-openstudio.oneplaceplatform.com}`)
+      - traefik.http.routers.openkpi-https.tls=true
+      - traefik.http.routers.openkpi-https.tls.certresolver=letsencrypt
+      - traefik.http.services.openkpi.loadbalancer.server.port=3000
+    environment:
+      - NODE_ENV=production
+      - OPENKPI_AI_PROVIDER=${OPENKPI_AI_PROVIDER:-mock}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-claude-sonnet-4-6}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - AZURE_OPENAI_API_KEY=${AZURE_OPENAI_API_KEY:-}
+      - AZURE_OPENAI_ENDPOINT=${AZURE_OPENAI_ENDPOINT:-}
+      - AZURE_OPENAI_DEPLOYMENT=${AZURE_OPENAI_DEPLOYMENT:-}
+    ports:
+      # Optional: also exposes the app on a direct host port. Handy for
+      # smoke-testing without going through Traefik. Comment out if you only
+      # want Traefik to reach it.
+      - "${OPENKPI_PORT:-3050}:3000"

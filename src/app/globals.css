@@ -1,0 +1,301 @@
+/* =============================================================================
+   OpenKPI Studio — Plain CSS design system
+   - Theme tokens via CSS variables, switched by data-theme on <html>
+   - Accent palette via data-accent
+   - Density via data-density
+   - Component-level helpers below (.card, .btn, .chip, .badge, .input)
+   - Per-component styles live in *.module.css next to each component
+   ============================================================================= */
+
+/* ---- Reset ------------------------------------------------------------- */
+*,
+*::before,
+*::after { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+a { color: inherit; text-decoration: none; }
+button { font: inherit; cursor: pointer; border: 0; background: transparent; color: inherit; }
+input, textarea, select { font: inherit; color: inherit; }
+img, svg { display: block; max-width: 100%; }
+h1, h2, h3, h4, h5, h6 { margin: 0; font-weight: 600; }
+p { margin: 0; }
+ul, ol { margin: 0; padding: 0; list-style: none; }
+
+/* ---- Themes ------------------------------------------------------------ */
+:root,
+[data-theme="light"] {
+  --bg: 246 248 251;
+  --bg-grad-1: 58 99 240 / 0.10;
+  --bg-grad-2: 20 184 166 / 0.08;
+  --surface: 255 255 255;
+  --surface-2: 246 248 251;
+  --surface-3: 238 242 247;
+  --border: 219 226 236;
+  --border-soft: 238 242 247;
+  --text: 11 18 38;
+  --text-muted: 66 82 110;
+  --text-soft: 134 148 171;
+  --sidebar: 11 18 38;
+  --sidebar-text: 219 226 236;
+  --sidebar-text-strong: 255 255 255;
+  --sidebar-active-bg: 39 70 214;
+  --sidebar-hover: 255 255 255 / 0.06;
+  --topbar: 255 255 255 / 0.75;
+  --shadow: 11 18 38 / 0.06;
+}
+
+[data-theme="dark"] {
+  --bg: 11 18 38;
+  --bg-grad-1: 58 99 240 / 0.20;
+  --bg-grad-2: 168 85 247 / 0.18;
+  --surface: 27 36 64;
+  --surface-2: 22 31 54;
+  --surface-3: 16 24 44;
+  --border: 44 58 85;
+  --border-soft: 32 44 70;
+  --text: 235 240 250;
+  --text-muted: 184 194 209;
+  --text-soft: 134 148 171;
+  --sidebar: 8 13 30;
+  --sidebar-text: 184 194 209;
+  --sidebar-text-strong: 255 255 255;
+  --sidebar-active-bg: 39 70 214;
+  --sidebar-hover: 255 255 255 / 0.06;
+  --topbar: 16 24 44 / 0.7;
+  --shadow: 0 0 0 / 0.35;
+}
+
+[data-theme="midnight"] {
+  --bg: 4 6 18;
+  --bg-grad-1: 124 58 237 / 0.20;
+  --bg-grad-2: 14 165 233 / 0.18;
+  --surface: 14 17 36;
+  --surface-2: 10 13 28;
+  --surface-3: 6 9 22;
+  --border: 34 38 62;
+  --border-soft: 24 28 48;
+  --text: 236 240 255;
+  --text-muted: 176 184 210;
+  --text-soft: 130 140 170;
+  --sidebar: 2 4 12;
+  --sidebar-text: 176 184 210;
+  --sidebar-text-strong: 255 255 255;
+  --sidebar-active-bg: 124 58 237;
+  --sidebar-hover: 255 255 255 / 0.06;
+  --topbar: 6 9 22 / 0.75;
+  --shadow: 0 0 0 / 0.45;
+}
+
+[data-theme="slate"] {
+  --bg: 234 238 246;
+  --bg-grad-1: 51 65 85 / 0.10;
+  --bg-grad-2: 100 116 139 / 0.10;
+  --surface: 255 255 255;
+  --surface-2: 241 245 249;
+  --surface-3: 226 232 240;
+  --border: 203 213 225;
+  --border-soft: 226 232 240;
+  --text: 15 23 42;
+  --text-muted: 51 65 85;
+  --text-soft: 100 116 139;
+  --sidebar: 15 23 42;
+  --sidebar-text: 203 213 225;
+  --sidebar-text-strong: 255 255 255;
+  --sidebar-active-bg: 30 58 138;
+  --sidebar-hover: 255 255 255 / 0.06;
+  --topbar: 255 255 255 / 0.7;
+  --shadow: 15 23 42 / 0.06;
+}
+
+[data-theme="solarized"] {
+  --bg: 253 246 227;
+  --bg-grad-1: 181 137 0 / 0.10;
+  --bg-grad-2: 38 139 210 / 0.10;
+  --surface: 255 252 240;
+  --surface-2: 246 240 220;
+  --surface-3: 236 230 210;
+  --border: 220 210 180;
+  --border-soft: 235 226 200;
+  --text: 88 110 117;
+  --text-muted: 101 123 131;
+  --text-soft: 147 161 161;
+  --sidebar: 7 54 66;
+  --sidebar-text: 147 161 161;
+  --sidebar-text-strong: 253 246 227;
+  --sidebar-active-bg: 38 139 210;
+  --sidebar-hover: 255 255 255 / 0.06;
+  --topbar: 255 252 240 / 0.8;
+  --shadow: 7 54 66 / 0.10;
+}
+
+/* ---- Accent palettes --------------------------------------------------- */
+:root,
+[data-accent="blue"]    { --accent: 39 70 214;  --accent-strong: 31 56 173;  --accent-soft: 217 228 255; --accent-fg: 255 255 255; }
+[data-accent="indigo"]  { --accent: 79 70 229;  --accent-strong: 67 56 202;  --accent-soft: 224 231 255; --accent-fg: 255 255 255; }
+[data-accent="violet"]  { --accent: 124 58 237; --accent-strong: 109 40 217; --accent-soft: 237 233 254; --accent-fg: 255 255 255; }
+[data-accent="teal"]    { --accent: 13 148 136; --accent-strong: 15 118 110; --accent-soft: 204 251 241; --accent-fg: 255 255 255; }
+[data-accent="emerald"] { --accent: 5 150 105;  --accent-strong: 4 120 87;   --accent-soft: 209 250 229; --accent-fg: 255 255 255; }
+[data-accent="rose"]    { --accent: 225 29 72;  --accent-strong: 190 18 60;  --accent-soft: 255 228 230; --accent-fg: 255 255 255; }
+
+/* ---- Density ----------------------------------------------------------- */
+[data-density="comfortable"] {
+  --card-pad: 1.25rem;
+  --card-gap: 1.25rem;
+  --card-radius: 16px;
+  --row-pad-y: 0.65rem;
+}
+[data-density="compact"] {
+  --card-pad: 0.875rem;
+  --card-gap: 0.75rem;
+  --card-radius: 12px;
+  --row-pad-y: 0.4rem;
+}
+
+/* ---- Base -------------------------------------------------------------- */
+html, body {
+  color: rgb(var(--text));
+  background: rgb(var(--bg));
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Inter, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+}
+body {
+  background-image:
+    radial-gradient(1200px 600px at 90% -10%, rgb(var(--bg-grad-1)), transparent 60%),
+    radial-gradient(900px 500px at -5% 5%, rgb(var(--bg-grad-2)), transparent 60%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+/* ---- Reusable component classes --------------------------------------- */
+.card {
+  background-color: rgb(var(--surface));
+  border: 1px solid rgb(var(--border));
+  border-radius: var(--card-radius, 16px);
+  box-shadow: 0 1px 2px rgb(var(--shadow)), 0 8px 24px rgb(var(--shadow));
+}
+.card-soft {
+  background-color: rgb(var(--surface-2));
+  border: 1px solid rgb(var(--border-soft));
+  border-radius: var(--card-radius, 16px);
+}
+.card-pad { padding: var(--card-pad, 20px); }
+.card-pad-sm { padding: 14px 16px; }
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 500;
+  border: 1px solid rgb(var(--border));
+  color: rgb(var(--text-muted));
+  background: rgb(var(--surface));
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.chip:hover { background: rgb(var(--surface-2)); color: rgb(var(--text)); }
+.chip-active {
+  background: rgb(var(--accent));
+  color: rgb(var(--accent-fg));
+  border-color: rgb(var(--accent));
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+}
+.badge-certified { background: rgba(16,185,129,0.12); color: rgb(5,150,105); border: 1px solid rgba(16,185,129,0.25); }
+.badge-draft     { background: rgba(245,158,11,0.12); color: rgb(180,83,9);  border: 1px solid rgba(245,158,11,0.25); }
+.badge-review    { background: rgba(225,29,72,0.12);  color: rgb(190,18,60); border: 1px solid rgba(225,29,72,0.25); }
+[data-theme="dark"] .badge-certified,
+[data-theme="midnight"] .badge-certified { color: rgb(110, 231, 183); }
+[data-theme="dark"] .badge-draft,
+[data-theme="midnight"] .badge-draft { color: rgb(252, 211, 77); }
+[data-theme="dark"] .badge-review,
+[data-theme="midnight"] .badge-review { color: rgb(253, 164, 175); }
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.15s ease;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-primary { background: rgb(var(--accent)); color: rgb(var(--accent-fg)); }
+.btn-primary:hover { background: rgb(var(--accent-strong)); }
+.btn-ghost {
+  background: rgb(var(--surface));
+  color: rgb(var(--text));
+  border-color: rgb(var(--border));
+}
+.btn-ghost:hover { background: rgb(var(--surface-2)); }
+.btn-soft {
+  background: rgb(var(--accent-soft));
+  color: rgb(var(--accent));
+}
+.btn-block { width: 100%; justify-content: center; }
+.btn-sm { padding: 6px 10px; font-size: 12px; }
+
+.input {
+  width: 100%;
+  background: rgb(var(--surface));
+  border: 1px solid rgb(var(--border));
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 13px;
+  color: rgb(var(--text));
+  transition: border 0.15s, box-shadow 0.15s;
+}
+.input::placeholder { color: rgb(var(--text-soft)); }
+.input:focus {
+  outline: none;
+  border-color: rgb(var(--accent));
+  box-shadow: 0 0 0 3px rgb(var(--accent) / 0.15);
+}
+
+.gradient-text {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(90deg, rgb(var(--accent)), rgb(20 184 166));
+}
+
+.surface-text { color: rgb(var(--text)); }
+.text-muted   { color: rgb(var(--text-muted)); }
+.text-soft    { color: rgb(var(--text-soft)); }
+.text-accent  { color: rgb(var(--accent)); }
+.divider      { height: 1px; background: rgb(var(--border-soft)); }
+
+/* ---- Focus + scrollbar polish ----------------------------------------- */
+*:focus-visible {
+  outline: 2px solid rgb(var(--accent));
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb { background: rgb(var(--border)); border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: rgb(var(--text-soft)); }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ---- Tiny layout helpers ---------------------------------------------- */
+.kpi-up   { color: rgb(5,150,105); }
+.kpi-down { color: rgb(225,29,72); }
+[data-theme="dark"]   .kpi-up,
+[data-theme="midnight"] .kpi-up   { color: rgb(110, 231, 183); }
+[data-theme="dark"]   .kpi-down,
+[data-theme="midnight"] .kpi-down { color: rgb(253, 164, 175); }

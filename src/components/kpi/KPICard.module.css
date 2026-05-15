@@ -1,0 +1,110 @@
+.card {
+  padding: var(--card-pad, 20px);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  text-align: left;
+}
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgb(var(--shadow)), 0 16px 40px rgb(var(--shadow));
+  border-color: rgb(var(--accent) / 0.4);
+}
+
+.head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.name {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: rgb(var(--text));
+}
+
+.domain {
+  font-size: 11px;
+  color: rgb(var(--text-soft));
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+
+.iconCircle {
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+  background: rgb(var(--accent-soft));
+  color: rgb(var(--accent));
+}
+
+.value {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: rgb(var(--text));
+  line-height: 1.1;
+}
+
+.deltaRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+.delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-weight: 600;
+}
+.deltaNote {
+  color: rgb(var(--text-soft));
+}
+
+.spark {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+
+.footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 10px;
+  border-top: 1px solid rgb(var(--border-soft));
+  font-size: 11px;
+  color: rgb(var(--text-soft));
+}
+.source {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 60%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.refresh {
+  white-space: nowrap;
+}
+
+.confidence {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 600;
+}
+.confDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+}
