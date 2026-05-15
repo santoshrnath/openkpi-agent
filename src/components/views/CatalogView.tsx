@@ -5,38 +5,45 @@ import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { Hero } from "@/components/layout/Hero";
 import { KPICard } from "@/components/kpi/KPICard";
-import { kpis, domains } from "@/lib/data/kpis";
 import { cx } from "@/lib/utils";
-import styles from "../page.module.css";
+import { KPI } from "@/types";
+import styles from "@/app/page.module.css";
 
-type Domain = (typeof domains)[number];
+const DOMAINS = ["All","Finance","HR","Procurement","Operations","Sales","Data"] as const;
+type Domain = (typeof DOMAINS)[number];
 
-export default function CatalogPage() {
+export function CatalogView({
+  workspaceSlug,
+  kpis,
+}: {
+  workspaceSlug: string;
+  kpis: KPI[];
+}) {
   const [domain, setDomain] = useState<Domain>("All");
   const [search, setSearch] = useState("");
 
-  const filtered = useMemo(
-    () =>
-      kpis.filter((k) => {
-        if (domain !== "All" && k.domain !== domain) return false;
-        if (search) {
-          const q = search.toLowerCase();
-          return (
-            k.name.toLowerCase().includes(q) ||
-            k.owner.toLowerCase().includes(q) ||
-            k.sourceSystem.toLowerCase().includes(q) ||
-            k.definition.toLowerCase().includes(q)
-          );
-        }
-        return true;
-      }),
-    [domain, search]
+  const filtered = useMemo(() =>
+    kpis.filter((k) => {
+      if (domain !== "All" && k.domain !== domain) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        return (
+          k.name.toLowerCase().includes(q) ||
+          k.owner.toLowerCase().includes(q) ||
+          k.sourceSystem.toLowerCase().includes(q) ||
+          k.definition.toLowerCase().includes(q)
+        );
+      }
+      return true;
+    }),
+    [kpis, domain, search]
   );
 
+  const base = `/w/${workspaceSlug}`;
   return (
     <>
       <div style={{ marginBottom: 12, display: "flex", alignItems: "center", gap: 6, fontSize: 12, color: "rgb(var(--text-soft))" }}>
-        <Link href="/">Command Center</Link>
+        <Link href={base}>Command Center</Link>
         <ChevronRight size={12} />
         <span>KPI Catalog</span>
       </div>
@@ -58,7 +65,7 @@ export default function CatalogPage() {
 
       <div className={styles.filterBar}>
         <div className={styles.chips}>
-          {domains.map((d) => (
+          {DOMAINS.map((d) => (
             <button
               key={d}
               onClick={() => setDomain(d)}
@@ -73,11 +80,15 @@ export default function CatalogPage() {
         </div>
       </div>
 
-      <div className={styles.grid}>
-        {filtered.map((k) => (
-          <KPICard key={k.id} kpi={k} />
-        ))}
-      </div>
+      {filtered.length === 0 ? (
+        <div className={`card ${styles.empty}`}>No KPIs match the current filter.</div>
+      ) : (
+        <div className={styles.grid}>
+          {filtered.map((k) => (
+            <KPICard key={k.id} kpi={k} workspaceSlug={workspaceSlug} />
+          ))}
+        </div>
+      )}
     </>
   );
 }

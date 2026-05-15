@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { notFound, useParams } from "next/navigation";
 import {
   ChevronRight,
   Share2,
@@ -18,29 +17,29 @@ import { useState } from "react";
 import { TrendChart } from "@/components/charts/TrendChart";
 import { ConfidenceDial } from "@/components/ui/ConfidenceDial";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { getKPI } from "@/lib/data/kpis";
 import { formatKPIValue } from "@/lib/utils";
 import { cx } from "@/lib/utils";
-import { generateMockAIResponse } from "@/lib/mockAI";
-import styles from "./page.module.css";
+import { KPI } from "@/types";
+import styles from "./KpiDetailView.module.css";
 
 const TABS = ["Overview", "Lineage", "Related", "History", "Audit"] as const;
 
-export default function KPIDetailPage() {
-  const params = useParams<{ id: string }>();
-  const kpi = getKPI(params.id);
+interface Props {
+  workspaceSlug: string;
+  kpi: KPI;
+  aiHint: string;
+}
+
+export function KpiDetailView({ workspaceSlug, kpi, aiHint }: Props) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Overview");
-
-  if (!kpi) return notFound();
-
-  const ai = generateMockAIResponse(`What does ${kpi.name} mean?`, kpi);
+  const base = `/w/${workspaceSlug}`;
 
   return (
     <>
       <div className={styles.crumbs}>
-        <Link href="/">Command Center</Link>
+        <Link href={base}>Command Center</Link>
         <ChevronRight size={12} />
-        <Link href="/catalog">KPI Catalog</Link>
+        <Link href={`${base}/catalog`}>KPI Catalog</Link>
         <ChevronRight size={12} />
         <span style={{ color: "rgb(var(--text))" }}>{kpi.name}</span>
       </div>
@@ -61,15 +60,11 @@ export default function KPIDetailPage() {
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
-          <Link href={`/lineage?kpi=${kpi.id}`} className="btn btn-ghost">
+          <Link href={`${base}/lineage?kpi=${kpi.id}`} className="btn btn-ghost">
             <Layers size={14} /> View lineage
           </Link>
-          <button className="btn btn-ghost">
-            <Share2 size={14} /> Share
-          </button>
-          <button className="btn btn-primary">
-            <Download size={14} /> Export
-          </button>
+          <button className="btn btn-ghost"><Share2 size={14} /> Share</button>
+          <button className="btn btn-primary"><Download size={14} /> Export</button>
         </div>
       </div>
 
@@ -86,7 +81,6 @@ export default function KPIDetailPage() {
       </div>
 
       <div className={styles.layout}>
-        {/* ---- Left: definition / formula / metadata ---- */}
         <div className={`card ${styles.metaCard}`}>
           <div className={styles.metaRow}>
             <div className={styles.metaLabel}>Definition</div>
@@ -94,9 +88,7 @@ export default function KPIDetailPage() {
           </div>
           <div className={styles.metaRow}>
             <div className={styles.metaLabel}>Formula</div>
-            <div className={styles.metaValue}>
-              <code>{kpi.formula}</code>
-            </div>
+            <div className={styles.metaValue}><code>{kpi.formula}</code></div>
           </div>
           <div className={styles.metaRow}>
             <div className={styles.metaLabel}>Source System</div>
@@ -123,9 +115,7 @@ export default function KPIDetailPage() {
             <div className={styles.metaLabel}>Used in dashboards</div>
             <div className={styles.relRow}>
               {kpi.relatedDashboards.map((d) => (
-                <span key={d} className={styles.relPill}>
-                  {d}
-                </span>
+                <span key={d} className={styles.relPill}>{d}</span>
               ))}
             </div>
           </div>
@@ -133,47 +123,28 @@ export default function KPIDetailPage() {
             <div className={styles.metaLabel}>Related KPIs</div>
             <div className={styles.relRow}>
               {kpi.relatedKPIs.map((d) => (
-                <span key={d} className={styles.relPill}>
-                  {d}
-                </span>
+                <span key={d} className={styles.relPill}>{d}</span>
               ))}
             </div>
           </div>
           <div className={styles.metaRow}>
             <div className={styles.metaLabel}>Known limitations</div>
-            <div
-              className={styles.metaValue}
-              style={{ display: "flex", gap: 8, alignItems: "start" }}
-            >
-              <AlertCircle
-                size={14}
-                style={{ color: "rgb(217,119,6)", marginTop: 2, flexShrink: 0 }}
-              />
+            <div className={styles.metaValue} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
+              <AlertCircle size={14} style={{ color: "rgb(217,119,6)", marginTop: 2, flexShrink: 0 }} />
               <span>{kpi.limitations}</span>
             </div>
           </div>
         </div>
 
-        {/* ---- Center: chart + insight ---- */}
         <div className={styles.center}>
           <div className={`card ${styles.chartCard}`}>
             <div className={styles.chartHead}>
               <div className={styles.chartTitle}>Trend · last 10 periods</div>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ textAlign: "right" }}>
-                  <div
-                    style={{
-                      fontSize: 20,
-                      fontWeight: 700,
-                      letterSpacing: "-0.02em",
-                    }}
-                  >
-                    {formatKPIValue(kpi.value, kpi.unit)}
-                  </div>
-                  <div style={{ fontSize: 11, color: "rgb(var(--text-soft))" }}>
-                    Current period
-                  </div>
+              <div style={{ textAlign: "right" }}>
+                <div style={{ fontSize: 20, fontWeight: 700, letterSpacing: "-0.02em" }}>
+                  {formatKPIValue(kpi.value, kpi.unit)}
                 </div>
+                <div style={{ fontSize: 11, color: "rgb(var(--text-soft))" }}>Current period</div>
               </div>
             </div>
             <TrendChart
@@ -184,9 +155,7 @@ export default function KPIDetailPage() {
           </div>
 
           <div className={`card ${styles.insight}`}>
-            <div className={styles.insightIcon}>
-              <Lightbulb size={18} />
-            </div>
+            <div className={styles.insightIcon}><Lightbulb size={18} /></div>
             <div>
               <div className={styles.insightTitle}>Why did this move?</div>
               <div className={styles.insightText}>{kpi.whyMoved}</div>
@@ -194,16 +163,15 @@ export default function KPIDetailPage() {
           </div>
         </div>
 
-        {/* ---- Right: AI + confidence ---- */}
         <div className={styles.right}>
           <div className={`card ${styles.aiBlock}`}>
             <div className={styles.aiHead}>
               <Sparkles size={16} style={{ color: "rgb(var(--accent))" }} />
               AI Explanation
             </div>
-            <div className={styles.aiCopy}>{ai.answer}</div>
+            <div className={styles.aiCopy}>{aiHint}</div>
             <Link
-              href={`/explainer?kpi=${kpi.id}`}
+              href={`${base}/explainer?kpi=${kpi.id}`}
               className="btn btn-soft btn-block"
               style={{ marginTop: 14 }}
             >
@@ -221,15 +189,9 @@ export default function KPIDetailPage() {
               Quick actions
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 8 }}>
-              <Link href={`/lineage?kpi=${kpi.id}`} className="btn btn-ghost btn-block">
-                View lineage map
-              </Link>
-              <Link href={`/explainer?kpi=${kpi.id}`} className="btn btn-ghost btn-block">
-                Ask why it moved
-              </Link>
-              <Link href="/brief" className="btn btn-ghost btn-block">
-                Add to brief
-              </Link>
+              <Link href={`${base}/lineage?kpi=${kpi.id}`} className="btn btn-ghost btn-block">View lineage map</Link>
+              <Link href={`${base}/explainer?kpi=${kpi.id}`} className="btn btn-ghost btn-block">Ask why it moved</Link>
+              <Link href={`${base}/brief`} className="btn btn-ghost btn-block">Add to brief</Link>
             </div>
           </div>
         </div>

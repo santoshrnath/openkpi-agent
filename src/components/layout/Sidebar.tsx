@@ -16,20 +16,28 @@ import { cx } from "@/lib/utils";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import styles from "./Sidebar.module.css";
 
-const nav = [
-  { href: "/", label: "Command Center", icon: LayoutDashboard },
-  { href: "/catalog", label: "KPI Catalog", icon: BookMarked },
-  { href: "/lineage", label: "Lineage Map", icon: Workflow },
-  { href: "/explainer", label: "AI Explainer", icon: Sparkles },
-  { href: "/brief", label: "Executive Brief", icon: FileText },
-  { href: "/dax-sql", label: "DAX / SQL Explainer", icon: Code2 },
-  { href: "/about", label: "About", icon: Info },
+const NAV = [
+  { suffix: "", label: "Command Center", icon: LayoutDashboard, exact: true },
+  { suffix: "/catalog", label: "KPI Catalog", icon: BookMarked },
+  { suffix: "/lineage", label: "Lineage Map", icon: Workflow },
+  { suffix: "/explainer", label: "AI Explainer", icon: Sparkles },
+  { suffix: "/brief", label: "Executive Brief", icon: FileText },
+  { suffix: "/dax-sql", label: "DAX / SQL Explainer", icon: Code2 },
+  { suffix: "/about", label: "About", icon: Info },
 ];
+
+function activeWorkspaceSlug(pathname: string | null): string {
+  if (!pathname) return "demo";
+  const m = pathname.match(/^\/w\/([^/]+)/);
+  return m?.[1] ?? "demo";
+}
 
 export function Sidebar() {
   const pathname = usePathname();
   const { settings } = useTheme();
   const compact = settings.sidebarStyle === "compact";
+  const slug = activeWorkspaceSlug(pathname);
+  const base = `/w/${slug}`;
 
   const nameParts = settings.workspaceName.split(" ");
   const head = nameParts[0] || "OpenKPI";
@@ -48,15 +56,16 @@ export function Sidebar() {
       </div>
 
       <nav className={styles.nav}>
-        {nav.map((item) => {
+        {NAV.map((item) => {
           const Icon = item.icon;
-          const active =
-            pathname === item.href ||
-            (item.href !== "/" && pathname?.startsWith(item.href));
+          const href = `${base}${item.suffix}`;
+          const active = item.exact
+            ? pathname === href
+            : pathname?.startsWith(href) ?? false;
           return (
             <Link
-              key={item.href}
-              href={item.href}
+              key={item.suffix || "/"}
+              href={href}
               title={compact ? item.label : undefined}
               className={cx(styles.navItem, active && styles.active)}
             >
@@ -68,7 +77,7 @@ export function Sidebar() {
       </nav>
 
       <div className={styles.profile}>
-        <Link href="/settings" className={styles.profileInner}>
+        <Link href={`${base}/settings`} className={styles.profileInner}>
           <div className={styles.avatar}>
             {settings.ownerName.charAt(0).toUpperCase()}
           </div>

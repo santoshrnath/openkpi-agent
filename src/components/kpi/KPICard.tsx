@@ -14,7 +14,8 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatChange, formatKPIValue } from "@/lib/utils";
 import styles from "./KPICard.module.css";
 
-export function KPICard({ kpi }: { kpi: KPI }) {
+export function KPICard({ kpi, workspaceSlug }: { kpi: KPI; workspaceSlug?: string }) {
+  const detailHref = workspaceSlug ? `/w/${workspaceSlug}/catalog/${kpi.id}` : `/catalog/${kpi.id}`;
   const good =
     kpi.goodWhen === "up"
       ? kpi.trend === "up"
@@ -34,7 +35,7 @@ export function KPICard({ kpi }: { kpi: KPI }) {
     conf >= 90 ? "rgb(5,150,105)" : conf >= 75 ? "rgb(217,119,6)" : "rgb(225,29,72)";
 
   return (
-    <Link href={`/catalog/${kpi.id}`} className={`card ${styles.card}`}>
+    <Link href={detailHref} className={`card ${styles.card}`}>
       <div className={styles.head}>
         <div>
           <div className={styles.name}>{kpi.name}</div>
