@@ -1,86 +1,54 @@
 # Roadmap
 
-OpenKPI Studio ships incrementally. Each phase is independently useful — you can stop at any phase and the product still works.
+## What's shipped
 
-## Phase 1 — Mock MVP (this release)
+| | Description | Status |
+| --- | --- | --- |
+| **1. Multi-workspace UI** | `/w/[slug]/...` route group, DB-backed; `/` → `/w/demo` redirect | ✅ |
+| **2. AI Explainer** | Claude Sonnet 4.6 grounded in KPI metadata, structured JSON response, audit-logged | ✅ |
+| **3. Auth + ACL** | NextAuth (Google + Email + dev-credentials), `Workspace.visibility`, 4-tier Membership role, invitation tokens | ✅ |
+| **4. CSV upload** | drag/drop, fuzzy header aliases, per-row error display, idempotent re-upload | ✅ |
+| **5. SQL connector framework** | encrypted-at-rest credentials, Postgres driver (read-only transaction, SSL-when-not-private), paste-SQL-→-live-KPI flow | ✅ |
+| **6. Scheduled refresh** | host cron `*/5 * * * *` → Bearer-auth endpoint → cadence-aware refresh, retry on transient DB blip | ✅ |
+| **7. AI-assisted documentation** | per-KPI `Suggest with AI` button + workspace-level "Auto-document missing fields" bulk action; Claude drafts grounded, hedged docs | ✅ |
+| **8. Inline KPI editing** | click-to-edit on every metadata field (definition, formula, limitations, owner, source, "why moved") | ✅ |
+| **9. Quick status menu** | clickable badge on every card: Certified / Draft / Needs Review | ✅ |
+| **10. Workspace settings** | rename, tagline, currency, visibility toggle, delete (admin-only, demo guarded) | ✅ |
+| **11. Members + invites** | admin-only invite form, 14-day token links, accept flow at `/invite/[token]` | ✅ |
+| **12. Audit log viewer** | paginated, action-filtered, pretty-formatted per kind | ✅ |
+| **13. Onboarding wizard** | 3-tile choice on empty workspaces (Upload CSV / Connect DB / Use sample data) | ✅ |
+| **14. Trend chart period selector** | All / 12m / 6m / 3m / YTD chips on KPI detail | ✅ |
+| **15. Smoke + auth test suites** | 76 cases verifying end-to-end behaviour | ✅ |
 
-- KPI Command Center with summary cards, filters, KPI grid
-- KPI Catalog + detail page (definition, formula, lineage rail, AI panel)
-- AI Explainer (chat-style with deterministic mock responses, sources, assumptions, confidence)
-- Lineage Map (flow + details table + insights rail)
-- Executive Brief (generated from sample portfolio)
-- DAX / SQL Explainer
-- Multi-theme platform (5 themes, 6 accents, 2 densities, sidebar style)
-- Settings page (workspace identity, currency, AI provider, API key placeholder)
+## Next (autonomous)
 
-**Goal:** prove the user experience and the governance information model.
+| | Effort | Notes |
+| --- | --- | --- |
+| **Multi-period CSV upload UX**: column-mapping confirmation step before write | half day | Bigger upload safety net |
+| **In-place catalog editing**: table view at `/w/<slug>/catalog` with editable cells | half day | Bulk steward work |
+| **Better empty states** on every page | 2 hours | Polish |
+| **README screenshots refresh** | 1 hour (manual) | Marketing |
 
-## Phase 2 — CSV / Excel upload
+## Next (requires user credentials)
 
-- Upload a CSV/Excel file of KPI definitions, history points and lineage steps
-- Validation pass (required fields, formula well-formed, source system known)
-- Persist to browser IndexedDB so the MVP is still backend-less
-- "Reset to sample data" button in Settings → Data
+| | What you need to provide | Effort |
+| --- | --- | --- |
+| **Real Google OAuth** | OAuth client ID + secret from Google Cloud Console | ~30 min |
+| **Email magic-link auth** | SMTP relay creds (Resend free tier recommended) | ~30 min |
+| **Snowflake connector** | Snowflake account + warehouse + role with USAGE | ~3 days |
+| **SQL Server / Azure SQL connector** | DB connection info | ~3 days |
+| **BigQuery connector** | GCP service-account JSON | ~3 days |
+| **Power BI metadata import** | Power BI Premium workspace + Azure AD app | ~5 days |
+| **Slack alerts on refresh failure** | Slack incoming-webhook URL | ~half day |
+| **Email alerts** | Same SMTP as magic-link | ~half day |
 
-**Goal:** customers can demo OpenKPI against their own KPI list in 10 minutes.
+## Future (enterprise unlocks)
 
-## Phase 3 — Postgres backend
-
-- FastAPI service exposes `/kpis`, `/lineage`, `/explain`, `/brief`, `/audit`
-- Postgres schema: `kpi`, `lineage_step`, `dashboard`, `audit_event`, `data_quality_test`
-- Replace `src/lib/data/*` with API calls — no UI changes
-- Docker Compose for local dev
-
-**Goal:** team-shared, persistent KPI catalogue.
-
-## Phase 4 — LLM integration
-
-- Server-side route handler `/api/explain` calls OpenAI / Anthropic / Azure OpenAI
-- Prompt is constrained to the KPI's metadata (RAG-style; the agent cannot hallucinate definitions)
-- Confidence score blends the KPI's governance confidence with the model's logprobs
-- Streaming responses in the AI Explainer
-
-**Goal:** real plain-English explanations grounded in your knowledge layer.
-
-## Phase 5 — Power BI metadata import
-
-- Connect to Power BI workspace via REST API
-- Import datasets, measures (DAX), and reports
-- Map measures to KPIs in the catalogue automatically
-- Surface DAX in the KPI detail page
-
-**Goal:** the catalogue stays in sync with what's actually deployed.
-
-## Phase 6 — SQL Server / Azure SQL connectors
-
-- Read-only connections to source systems
-- Run KPI formulas against live data (sandboxed, time-boxed)
-- Show data-quality test results inline in the KPI card
-
-**Goal:** the catalogue is *live*, not stale documentation.
-
-## Phase 7 — Role-based access and audit logs
-
-- SSO (OIDC) — pluggable provider
-- Roles: Viewer, Editor, Steward, Admin
-- Audit log table for every certification, edit, AI response
-- Approval workflow for moving KPIs from Draft → Certified
-
-**Goal:** enterprise-ready governance.
-
-## Phase 8 — Enterprise deployment templates
-
-- Helm chart for Kubernetes
-- Terraform module for AWS / Azure / GCP
-- Air-gapped install guide (private LLM endpoint)
-- SOC 2 / ISO 27001 controls mapping
-
-**Goal:** procurement-friendly for regulated industries.
-
----
-
-## Out of scope (deliberately)
-
-- **Building yet another BI tool.** OpenKPI works *with* your existing BI stack (Power BI, Tableau, Looker, Sigma, Metabase), not against it.
-- **Storing transactional data.** OpenKPI stores metadata. Your warehouse stays the source of truth.
-- **One vendor's LLM.** AI provider is pluggable from day one.
+- **Embeddable KPI tiles** (a `<script>` tag a customer can drop on their intranet / Confluence)
+- **Multi-workspace search** for signed-in users — find a KPI by name across every workspace you're a member of
+- **Webhook outbound** on KPI status / value-change events
+- **SSO via OIDC** (Okta, Azure AD, Google Workspace)
+- **Audit-event export** (CSV / JSONL stream)
+- **SOC 2 control mappings** documentation
+- **Helm chart** for self-hosted Kubernetes deployments
+- **Air-gapped install** with private LLM endpoint

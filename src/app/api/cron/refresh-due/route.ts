@@ -30,11 +30,32 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const candidates = await prisma.kpi.findMany({
-    where: { connectionId: { not: null } },
-    include: { connection: true },
-    take: 200,
-  });
+  // Transient DB blips through the Coolify-NAT path occasionally drop a
+  // connection. Retry once after a short backoff before giving up.
+  async function findCandidates() {
+    return prisma.kpi.findMany({
+      where: { connectionId: { not: null } },
+      include: { connection: true },
+      take: 200,
+    });
+  }
+  let candidates;
+  try {
+    candidates = await findCandidates();
+  } catch (e) {
+    await new Promise((r) => setTimeout(r, 500));
+    try {
+      candidates = await findCandidates();
+    } catch (e2) {
+      return NextResponse.json(
+        {
+          error: "DB unreachable on retry; will tick again next interval",
+          detail: e2 instanceof Error ? e2.message : String(e2),
+        },
+        { status: 503 }
+      );
+    }
+  }
 
   const now = new Date();
   const due = candidates.filter((k) => isDue(k.lastRefresh, k.refreshFrequency, now));
