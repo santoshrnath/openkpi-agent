@@ -166,7 +166,7 @@ export function CommandCenterView({
               : "Sign in (top-right) and create your own workspace to upload KPIs and connect data sources."}
           </div>
           <Link
-            href={isSignedIn ? "/w/new" : "/login"}
+            href={isSignedIn ? "/w/new" : "/sign-in"}
             className="btn btn-soft btn-sm"
           >
             {isSignedIn ? "Create workspace" : "Sign in"}

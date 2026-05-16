@@ -2,7 +2,7 @@
 // OpenKPI Studio — Prisma schema
 // ─────────────────────────────────────────────────────────────────────────────
 // Models:
-//   - NextAuth: User, Account, Session, VerificationToken
+//   - Identity: User (Clerk-backed; Clerk owns Account/Session)
 //   - Multi-tenant: Workspace, Membership (User ↔ Workspace with Role)
 //   - Domain:    Kpi, KpiHistoryPoint, LineageFlow, LineageStep, AiConversation,
 //                AiMessage, AuditEvent, SourceConnection (Phase B)
@@ -18,44 +18,16 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// ─── NextAuth core ───────────────────────────────────────────────────────────
-model Account {
-  id                String  @id @default(cuid())
-  userId            String
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String? @db.Text
-  session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@unique([provider, providerAccountId])
-}
-
-model Session {
-  id           String   @id @default(cuid())
-  sessionToken String   @unique
-  userId       String
-  expires      DateTime
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}
-
-model VerificationToken {
-  identifier String
-  token      String   @unique
-  expires    DateTime
-
-  @@unique([identifier, token])
-}
-
+// ─── Identity (Clerk-backed) ─────────────────────────────────────────────────
+// Clerk owns sign-in, sessions, password/OAuth/MFA. We keep a local `User`
+// row so every domain row (Membership, Kpi.ownerUserId, AuditEvent.userId,
+// AiConversation.userId) can use a stable FK that survives provider changes.
+//
+// clerkId is the link to Clerk's user_xxx. Null on legacy rows (pre-Clerk).
+// We match by email on first sign-in to preserve those FKs.
 model User {
   id            String    @id @default(cuid())
+  clerkId       String?   @unique
   name          String?
   email         String?   @unique
   emailVerified DateTime?
@@ -63,8 +35,6 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts      Account[]
-  sessions      Session[]
   memberships   Membership[]
   auditEvents   AuditEvent[]
   conversations AiConversation[]

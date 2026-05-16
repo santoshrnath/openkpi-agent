@@ -27,7 +27,7 @@ export default async function AcceptInvitePage({ params }: { params: { token: st
   const viewer = await getViewer();
   if (!viewer.userId) {
     // Send them to login; they come back here after sign-in to accept.
-    redirect(`/login?callbackUrl=${encodeURIComponent(`/invite/${params.token}`)}`);
+    redirect(`/sign-in?redirect_url=${encodeURIComponent(`/invite/${params.token}`)}`);
   }
 
   // Match email of the invite to the signed-in user; if different, refuse.

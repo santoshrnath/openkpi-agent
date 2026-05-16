@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ChevronsUpDown, Plus, Globe, Lock, Building2 } from "lucide-react";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@clerk/nextjs";
 import { cx } from "@/lib/utils";
 import styles from "./WorkspaceSwitcher.module.css";
 
@@ -24,7 +24,8 @@ function currentSlug(pathname: string | null): string | null {
 
 export function WorkspaceSwitcher() {
   const pathname = usePathname();
-  const { status } = useSession();
+  const { isLoaded, isSignedIn } = useAuth();
+  const sessionKey = !isLoaded ? "loading" : isSignedIn ? "authenticated" : "unauthenticated";
   const [open, setOpen] = useState(false);
   const [items, setItems] = useState<WorkspaceItem[] | null>(null);
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
@@ -34,18 +35,18 @@ export function WorkspaceSwitcher() {
   // Re-fetch when the session changes (sign in / sign out).
   useEffect(() => {
     if (!open) return;
-    if (loadedFor === status) return;
+    if (loadedFor === sessionKey) return;
     fetch("/api/me/workspaces")
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
       .then((d: { workspaces: WorkspaceItem[] }) => {
         setItems(d.workspaces);
-        setLoadedFor(status);
+        setLoadedFor(sessionKey);
       })
       .catch(() => {
         setItems([]);
-        setLoadedFor(status);
+        setLoadedFor(sessionKey);
       });
-  }, [open, status, loadedFor]);
+  }, [open, sessionKey, loadedFor]);
 
   const current = items?.find((w) => w.slug === slug);
 
@@ -76,7 +77,7 @@ export function WorkspaceSwitcher() {
               <div className={styles.empty}>Loading…</div>
             ) : items.length === 0 ? (
               <div className={styles.empty}>
-                {status === "authenticated"
+                {isSignedIn
                   ? "You're not a member of any workspaces yet."
                   : "Sign in to see your workspaces."}
               </div>

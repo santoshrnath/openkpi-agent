@@ -199,7 +199,7 @@ export function SettingsClient({
                 className={cx(styles.visCard, visibility === "PRIVATE" && styles.active)}
               >
                 <h3><Lock size={14} style={{ display: "inline", marginRight: 6 }} /> Private</h3>
-                <p>Default. Anonymous viewers are redirected to /login. Only members can read or edit.</p>
+                <p>Default. Anonymous viewers are redirected to /sign-in. Only members can read or edit.</p>
               </button>
               <button
                 type="button"

@@ -13,7 +13,7 @@ export default async function WorkspaceLayout({
   const access = await getWorkspaceAccess(params.slug);
   if (!access) notFound();
   if (!access.canView) {
-    redirect(`/login?callbackUrl=${encodeURIComponent(`/w/${params.slug}`)}`);
+    redirect(`/sign-in?redirect_url=${encodeURIComponent(`/w/${params.slug}`)}`);
   }
   return <>{children}</>;
 }

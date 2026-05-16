@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { useAuth } from "@clerk/nextjs";
 import { Sparkles, LogIn } from "lucide-react";
 import styles from "./page.module.css";
 
@@ -19,9 +19,9 @@ function slugify(s: string) {
 
 export default function NewWorkspacePage() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { isLoaded, isSignedIn } = useAuth();
 
-  if (status === "loading") {
+  if (!isLoaded) {
     return (
       <div className={styles.shell}>
         <div className={`card ${styles.card}`}>Loading…</div>
@@ -29,7 +29,7 @@ export default function NewWorkspacePage() {
     );
   }
 
-  if (!session?.user) {
+  if (!isSignedIn) {
     return (
       <div className={styles.shell}>
         <div className={`card ${styles.card}`}>
@@ -41,7 +41,7 @@ export default function NewWorkspacePage() {
             Sign in to create your own private workspace.
           </p>
           <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-            <Link href={`/login?callbackUrl=${encodeURIComponent("/w/new")}`} className="btn btn-primary">
+            <Link href={`/sign-in?redirect_url=${encodeURIComponent("/w/new")}`} className="btn btn-primary">
               <LogIn size={14} /> Sign in
             </Link>
             <Link href="/w/demo" className="btn btn-ghost">

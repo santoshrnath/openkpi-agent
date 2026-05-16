@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 import { Shell } from "@/components/layout/Shell";
 
@@ -14,10 +15,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body>
-        <Shell>{children}</Shell>
-      </body>
-    </html>
+    <ClerkProvider
+      appearance={{
+        variables: {
+          colorPrimary: "rgb(99, 102, 241)",
+          borderRadius: "10px",
+        },
+      }}
+    >
+      <html lang="en">
+        <body>
+          <Shell>{children}</Shell>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }

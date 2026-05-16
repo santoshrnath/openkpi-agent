@@ -11,6 +11,9 @@
 # ─── Stage 1: deps ───────────────────────────────────────────────────────
 FROM node:20-bookworm-slim AS deps
 WORKDIR /app
+# Prisma's getConfig validation reads env("DATABASE_URL") even for `generate`.
+# We don't actually connect at build time — just need the name to resolve.
+ENV DATABASE_URL=postgresql://build:build@localhost:5432/build
 RUN apt-get update && apt-get install -y --no-install-recommends \
     openssl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
@@ -23,7 +26,20 @@ RUN npx prisma generate
 # ─── Stage 2: build ──────────────────────────────────────────────────────
 FROM node:20-bookworm-slim AS build
 WORKDIR /app
-ENV NEXT_TELEMETRY_DISABLED=1
+ENV NEXT_TELEMETRY_DISABLED=1 \
+    DATABASE_URL=postgresql://build:build@localhost:5432/build
+# NEXT_PUBLIC_* must be baked at build time — they're inlined into the
+# client bundle and cannot be overridden at runtime.
+ARG NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY
+ARG NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+ARG NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+ARG NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL=/
+ARG NEXT_PUBLIC_CLERK_SIGN_UP_FORCE_REDIRECT_URL=/
+ENV NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=$NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY \
+    NEXT_PUBLIC_CLERK_SIGN_IN_URL=$NEXT_PUBLIC_CLERK_SIGN_IN_URL \
+    NEXT_PUBLIC_CLERK_SIGN_UP_URL=$NEXT_PUBLIC_CLERK_SIGN_UP_URL \
+    NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL=$NEXT_PUBLIC_CLERK_SIGN_IN_FORCE_REDIRECT_URL \
+    NEXT_PUBLIC_CLERK_SIGN_UP_FORCE_REDIRECT_URL=$NEXT_PUBLIC_CLERK_SIGN_UP_FORCE_REDIRECT_URL
 RUN apt-get update && apt-get install -y --no-install-recommends openssl ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=deps /app/node_modules ./node_modules

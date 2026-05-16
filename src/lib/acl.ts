@@ -1,24 +1,77 @@
 import "server-only";
-import { getServerSession } from "next-auth";
+import { NextResponse } from "next/server";
+import { auth, clerkClient } from "@clerk/nextjs/server";
 import { Role, Visibility } from "@prisma/client";
-import { authOptions } from "./auth";
 import { prisma } from "./db";
 
 export interface Viewer {
+  /** Local User row id (cuid). null if not signed in. */
   userId: string | null;
+  /** Clerk user_xxx id, if signed in. */
+  clerkId: string | null;
   email: string | null;
   name: string | null;
   image: string | null;
 }
 
+const ANON: Viewer = {
+  userId: null,
+  clerkId: null,
+  email: null,
+  name: null,
+  image: null,
+};
+
+/**
+ * Resolve the current request's viewer.
+ *
+ * Flow:
+ *   1. Clerk's auth() gives us clerkId (or null if signed out)
+ *   2. Look up the local User row by clerkId
+ *   3. First-time sign-in: try matching by email (to inherit any pre-Clerk
+ *      Memberships / KPIs / audit FKs) — link if found, else create fresh.
+ *
+ * The local User row's id stays stable across provider swaps, so every
+ * existing foreign key keeps working.
+ */
 export async function getViewer(): Promise<Viewer> {
-  const session = await getServerSession(authOptions);
-  const userId = (session?.user as { id?: string })?.id ?? null;
+  const { userId: clerkId } = await auth();
+  if (!clerkId) return ANON;
+
+  let user = await prisma.user.findUnique({ where: { clerkId } });
+
+  if (!user) {
+    const client = await clerkClient();
+    const c = await client.users.getUser(clerkId);
+    const email = c.primaryEmailAddress?.emailAddress
+      ?? c.emailAddresses[0]?.emailAddress
+      ?? null;
+    const fullName = [c.firstName, c.lastName].filter(Boolean).join(" ") || null;
+    const image = c.imageUrl ?? null;
+
+    if (email) {
+      const existing = await prisma.user.findUnique({ where: { email } });
+      if (existing) {
+        user = await prisma.user.update({
+          where: { id: existing.id },
+          data: { clerkId, name: existing.name ?? fullName, image: existing.image ?? image },
+        });
+      }
+    }
+
+    if (!user) {
+      user = await prisma.user.create({
+        data: { clerkId, email, name: fullName, image },
+      });
+    }
+  }
+
   return {
-    userId,
-    email: session?.user?.email ?? null,
-    name: session?.user?.name ?? null,
-    image: session?.user?.image ?? null,
+    userId: user.id,
+    clerkId,
+    email: user.email,
+    name: user.name,
+    image: user.image,
   };
 }
 
@@ -36,7 +89,6 @@ export interface WorkspaceAccess {
   canAdmin: boolean;
 }
 
-/** Resolve the viewer's access to a workspace. Returns null if workspace doesn't exist. */
 export async function getWorkspaceAccess(
   slug: string,
   viewer?: Viewer
@@ -73,9 +125,6 @@ export async function getWorkspaceAccess(
   };
 }
 
-import { NextResponse } from "next/server";
-
-/** Return an early NextResponse if the viewer cannot view this workspace. */
 export async function gateView(slug: string): Promise<NextResponse | WorkspaceAccess> {
   const a = await getWorkspaceAccess(slug);
   if (!a) return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
@@ -83,7 +132,6 @@ export async function gateView(slug: string): Promise<NextResponse | WorkspaceAc
   return a;
 }
 
-/** Return an early NextResponse if the viewer cannot mutate this workspace. */
 export async function gateEdit(slug: string): Promise<NextResponse | WorkspaceAccess> {
   const a = await getWorkspaceAccess(slug);
   if (!a) return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
@@ -93,7 +141,6 @@ export async function gateEdit(slug: string): Promise<NextResponse | WorkspaceAc
   return a;
 }
 
-/** Convenience: throws 'unauthorized' / 'forbidden' if access is insufficient. */
 export async function assertCanEdit(slug: string): Promise<WorkspaceAccess> {
   const a = await getWorkspaceAccess(slug);
   if (!a) {
