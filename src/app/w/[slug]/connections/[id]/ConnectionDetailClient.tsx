@@ -47,19 +47,9 @@ export function ConnectionDetailClient({
   const [saveErr, setSaveErr] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch(`${apiBase}/query`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sql: `SELECT schemaname || '.' || tablename AS t
-                FROM pg_catalog.pg_tables
-               WHERE schemaname NOT IN ('pg_catalog','information_schema')
-            ORDER BY 1 LIMIT 100`,
-        rowLimit: 100,
-      }),
-    })
+    fetch(`${apiBase}/tables`)
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((d: QueryResult) => setTables(d.rows.map((r) => String(r.t))))
+      .then((d: { tables: string[] }) => setTables(d.tables))
       .catch(() => setTables([]));
   }, [apiBase]);
 
