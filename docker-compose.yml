@@ -61,6 +61,9 @@ services:
       - ENCRYPTION_KEY=${ENCRYPTION_KEY:-}
       # ---- Cron shared secret (host crontab → /api/cron/* Bearer token) -
       - CRON_SECRET=${CRON_SECRET:-}
+      # ---- DEV ONLY: enable passwordless sign-in (any email is accepted) -
+      # Set OPENKPI_DEV_AUTH=true in the server's .env to enable.
+      - OPENKPI_DEV_AUTH=${OPENKPI_DEV_AUTH:-}
       # ---- NextAuth -----------------------------------------------------
       - NEXTAUTH_URL=${NEXTAUTH_URL:-https://openstudio.oneplaceplatform.com}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-}

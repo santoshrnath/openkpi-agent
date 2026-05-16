@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { parseCsv } from "@/lib/import/parse";
 import { validateRows } from "@/lib/import/validate";
 import { writeKpis } from "@/lib/import/write";
+import { gateEdit } from "@/lib/acl";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -25,6 +26,8 @@ export async function POST(
   req: NextRequest,
   { params }: { params: { slug: string } }
 ) {
+  const gate = await gateEdit(params.slug);
+  if (gate instanceof NextResponse) return gate;
   const ws = await prisma.workspace.findUnique({ where: { slug: params.slug } });
   if (!ws) {
     return NextResponse.json({ error: "Workspace not found" }, { status: 404 });

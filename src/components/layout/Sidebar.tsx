@@ -13,6 +13,7 @@ import {
   Info,
   Database,
   Upload,
+  Users,
 } from "lucide-react";
 import { cx } from "@/lib/utils";
 import { useTheme } from "@/components/providers/ThemeProvider";
@@ -27,6 +28,7 @@ const NAV = [
   { suffix: "/explainer", label: "AI Explainer", icon: Sparkles },
   { suffix: "/brief", label: "Executive Brief", icon: FileText },
   { suffix: "/dax-sql", label: "DAX / SQL Explainer", icon: Code2 },
+  { suffix: "/members", label: "Members", icon: Users },
   { suffix: "/about", label: "About", icon: Info },
 ];
 

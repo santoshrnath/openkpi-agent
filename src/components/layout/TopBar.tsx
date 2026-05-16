@@ -9,6 +9,7 @@ import {
   useTheme,
 } from "@/components/providers/ThemeProvider";
 import { cx } from "@/lib/utils";
+import { AuthWidget } from "./AuthWidget";
 import styles from "./TopBar.module.css";
 
 const THEMES: { id: ThemeName; label: string; cls: string }[] = [
@@ -152,6 +153,8 @@ export function TopBar() {
           <Bell size={16} />
           <span className={styles.notifDot} />
         </button>
+
+        <AuthWidget />
       </div>
     </header>
   );

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { KpiTrend } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { makeConnector } from "@/lib/connectors";
+import { gateEdit } from "@/lib/acl";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -11,6 +12,8 @@ export async function POST(
   _req: NextRequest,
   { params }: { params: { slug: string; kpiSlug: string } }
 ) {
+  const gate = await gateEdit(params.slug);
+  if (gate instanceof NextResponse) return gate;
   const ws = await prisma.workspace.findUnique({ where: { slug: params.slug } });
   if (!ws) return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
 

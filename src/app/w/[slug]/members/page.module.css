@@ -1,0 +1,128 @@
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: rgb(var(--text-soft));
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+@media (min-width: 1000px) {
+  .layout { grid-template-columns: minmax(0, 1fr) 360px; }
+}
+
+.list {
+  padding: 12px 0;
+}
+.row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid rgb(var(--border-soft));
+}
+.row:last-child { border-bottom: none; }
+.avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d946ef, rgb(var(--accent)));
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+.who { flex: 1; min-width: 0; }
+.name {
+  font-weight: 600;
+  color: rgb(var(--text));
+  font-size: 14px;
+}
+.email {
+  font-size: 12px;
+  color: rgb(var(--text-muted));
+}
+.role {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-weight: 600;
+}
+.roleAdmin    { background: rgba(124,58,237,0.12); color: rgb(124,58,237); }
+.roleSteward  { background: rgba(13,148,136,0.12); color: rgb(13,148,136); }
+.roleEditor   { background: rgba(39,70,214,0.12);  color: rgb(39,70,214); }
+.roleViewer   { background: rgb(var(--surface-2)); color: rgb(var(--text-muted)); }
+
+.invitePanel {
+  padding: 22px;
+}
+.invitePanel h3 {
+  font-size: 14px;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: rgb(var(--text));
+}
+.invitePanel p {
+  color: rgb(var(--text-muted));
+  font-size: 12.5px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.label {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgb(var(--text));
+}
+
+.invLink {
+  padding: 10px 12px;
+  background: rgb(var(--surface-2));
+  border: 1px solid rgb(var(--border-soft));
+  border-radius: 10px;
+  font-family: ui-monospace, monospace;
+  font-size: 11.5px;
+  word-break: break-all;
+  margin: 10px 0;
+  color: rgb(var(--text));
+}
+
+.error {
+  margin-bottom: 12px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(225,29,72,0.10);
+  border: 1px solid rgba(225,29,72,0.30);
+  color: rgb(190,18,60);
+  font-size: 13px;
+}
+
+.pendingList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+}
+.pendingRow {
+  padding: 10px 12px;
+  background: rgb(var(--surface-2));
+  border-radius: 8px;
+  font-size: 12px;
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: rgb(var(--text));
+}

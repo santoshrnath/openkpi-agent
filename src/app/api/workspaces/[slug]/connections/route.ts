@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { encryptJson } from "@/lib/crypto";
 import { PostgresConnector } from "@/lib/connectors/postgres";
+import { gateView, gateEdit } from "@/lib/acl";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,6 +11,8 @@ export const maxDuration = 30;
 
 // ─── GET — list connections (without credentials) ────────────────────────────
 export async function GET(_req: NextRequest, { params }: { params: { slug: string } }) {
+  const gate = await gateView(params.slug);
+  if (gate instanceof NextResponse) return gate;
   const ws = await prisma.workspace.findUnique({ where: { slug: params.slug } });
   if (!ws) return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
 
@@ -38,6 +41,8 @@ const CreateBody = z.object({
 });
 
 export async function POST(req: NextRequest, { params }: { params: { slug: string } }) {
+  const gate = await gateEdit(params.slug);
+  if (gate instanceof NextResponse) return gate;
   const ws = await prisma.workspace.findUnique({ where: { slug: params.slug } });
   if (!ws) return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
+import { gateEdit } from "@/lib/acl";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -30,6 +31,8 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: { slug: string; kpiSlug: string } }
 ) {
+  const gate = await gateEdit(params.slug);
+  if (gate instanceof NextResponse) return gate;
   const ws = await prisma.workspace.findUnique({ where: { slug: params.slug } });
   if (!ws) return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
 

@@ -78,14 +78,20 @@ enum Role {
   VIEWER  // read-only
 }
 
+enum Visibility {
+  PUBLIC   // anyone with the URL can view; members can edit
+  PRIVATE  // only members can view or edit
+}
+
 model Workspace {
-  id        String   @id @default(cuid())
-  slug      String   @unique // url segment, e.g. "acme-finance"
-  name      String
-  tagline   String?
-  currency  String   @default("USD")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         String     @id @default(cuid())
+  slug       String     @unique // url segment, e.g. "acme-finance"
+  name       String
+  tagline    String?
+  currency   String     @default("USD")
+  visibility Visibility @default(PRIVATE)
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
 
   memberships       Membership[]
   kpis              Kpi[]

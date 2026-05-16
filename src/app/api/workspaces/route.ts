@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
+import { Role, Visibility } from "@prisma/client";
 import { prisma } from "@/lib/db";
+import { getViewer } from "@/lib/acl";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -14,6 +16,7 @@ const Body = z.object({
     .regex(/^[a-z0-9-]+$/, "Lowercase letters, digits, and hyphens only"),
   tagline: z.string().max(200).optional(),
   currency: z.enum(["USD", "EUR", "GBP", "INR", "AED"]).optional(),
+  visibility: z.enum(["PUBLIC", "PRIVATE"]).optional(),
 });
 
 const RESERVED = new Set(["new", "demo", "settings", "about", "api"]);
@@ -41,12 +44,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const viewer = await getViewer();
+
   const ws = await prisma.workspace.create({
     data: {
       slug: body.slug,
       name: body.name,
       tagline: body.tagline,
       currency: body.currency ?? "USD",
+      visibility: (body.visibility ?? "PRIVATE") as Visibility,
+      // If we know the creator, make them admin so they own this workspace.
+      memberships: viewer.userId
+        ? { create: { userId: viewer.userId, role: Role.ADMIN } }
+        : undefined,
     },
   });
 
