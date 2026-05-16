@@ -64,7 +64,11 @@ case_eq "/w/demo/about → 200"      "$(http_status "$BASE/w/demo/about")" "200"
 case_eq "/w/demo/audit → 200"      "$(http_status "$BASE/w/demo/audit")" "200"
 case_eq "/w/demo/members → 200"    "$(http_status "$BASE/w/demo/members")" "200"
 case_eq "/w/demo/connections → 200" "$(http_status "$BASE/w/demo/connections")" "200"
-case_eq "/w/demo/import → 200"     "$(http_status "$BASE/w/demo/import")" "200"
+# /w/demo/import is now gated server-side for non-members: anon viewers
+# of even a PUBLIC workspace get redirected to /w/demo?readonly=import
+# rather than seeing a form they can't submit.
+case_eq "/w/demo/import → 307 (read-only redirect)" "$(http_status "$BASE/w/demo/import")" "307"
+case_eq "/w/demo/connections/new → 307 (read-only redirect)" "$(http_status "$BASE/w/demo/connections/new")" "307"
 case_eq "/w/demo/settings → 200"   "$(http_status "$BASE/w/demo/settings")" "200"
 case_eq "/login → 200"             "$(http_status "$BASE/login")" "200"
 case_eq "/w/new → 200"             "$(http_status "$BASE/w/new")" "200"
