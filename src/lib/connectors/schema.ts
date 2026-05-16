@@ -1,5 +1,6 @@
 import "server-only";
 import { Connector, ConnectorKind } from "./types";
+import type { CsvConfig } from "./csv";
 
 export interface SchemaTable {
   name: string;
@@ -22,8 +23,8 @@ const DIALECT: Record<ConnectorKind, string> = {
   COUPA: "Coupa API.",
   WORKDAY: "Workday API.",
   SAP: "SAP HANA SQL.",
-  CSV: "CSV (no live query).",
-  EXCEL: "Excel (no live query).",
+  CSV: "In-memory CSV via alasql. Use LIMIT. Backtick-quote column names that contain spaces or punctuation. Dates are stored as strings — wrap in DATE(col) or compare as strings if needed.",
+  EXCEL: "In-memory Excel via alasql (first sheet only). Use LIMIT. Backtick-quote column names that contain spaces or punctuation. Dates are strings — wrap in DATE(col) or compare as strings.",
 };
 
 const MAX_TABLES = 50;
@@ -36,9 +37,27 @@ const MAX_COLS = 25;
  */
 export async function getSchemaSnapshot(
   c: Connector,
-  kind: ConnectorKind
+  kind: ConnectorKind,
+  config?: unknown
 ): Promise<SchemaSnapshot> {
   const dialect = DIALECT[kind] ?? "SQL";
+
+  // CSV / Excel connections embed their full schema in `config` — no DB hop.
+  if ((kind === "CSV" || kind === "EXCEL") && config && typeof config === "object") {
+    const cfg = config as CsvConfig;
+    if (Array.isArray(cfg.columns) && cfg.tableName) {
+      return {
+        dialect,
+        tables: [
+          {
+            name: cfg.tableName,
+            columns: cfg.columns.map((col) => ({ name: col.name, type: col.type })),
+          },
+        ],
+        truncated: false,
+      };
+    }
+  }
 
   // For Postgres / MSSQL / Snowflake / BigQuery we use INFORMATION_SCHEMA;
   // for PowerBI and others we just return the table list.

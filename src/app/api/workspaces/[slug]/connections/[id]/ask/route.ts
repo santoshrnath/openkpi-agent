@@ -60,7 +60,7 @@ export async function POST(
   let draft;
   try {
     const c = makeConnector(conn);
-    const snap = await getSchemaSnapshot(c, conn.kind as ConnectorKind);
+    const snap = await getSchemaSnapshot(c, conn.kind as ConnectorKind, conn.config);
     if (snap.tables.length === 0) {
       return NextResponse.json(
         { error: "No tables visible to this connection — cannot ground the answer." },

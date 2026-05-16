@@ -77,4 +77,21 @@ export const SUPPORTED_KINDS: KindMeta[] = [
       help: "Azure AD app with Power BI Tenant.Read.All permission, added to the workspace as Member/Admin.",
     },
   },
+  {
+    id: "CSV",
+    label: "Upload CSV",
+    available: true,
+    // The /connections/new UI special-cases CSV to show a file picker
+    // instead of the URL+extra fields. These two placeholders are
+    // unused but kept for type-shape symmetry.
+    urlPlaceholder: "",
+    urlHelp: "Upload a CSV (max 8MB). We infer column types from the first 200 rows and let you query it in plain English just like a database.",
+  },
+  {
+    id: "EXCEL",
+    label: "Upload Excel",
+    available: true,
+    urlPlaceholder: "",
+    urlHelp: "Upload an .xlsx or .xls file (max 8MB). We parse the first sheet, infer column types, and query the same way as a CSV.",
+  },
 ];

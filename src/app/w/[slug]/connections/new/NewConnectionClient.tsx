@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { ChevronRight, Check, Database } from "lucide-react";
+import { ChevronRight, Check, Database, Upload } from "lucide-react";
 import { Hero } from "@/components/layout/Hero";
 import { SUPPORTED_KINDS } from "@/lib/connectors/kinds";
 import { cx } from "@/lib/utils";
@@ -19,21 +19,38 @@ export default function NewConnectionClient() {
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
   const [extraJson, setExtraJson] = useState("");
+  const [csvFile, setCsvFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const meta = SUPPORTED_KINDS.find((k) => k.id === kind);
+  const isUpload = kind === "CSV" || kind === "EXCEL";
+  const accept = kind === "EXCEL"
+    ? ".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+    : ".csv,text/csv";
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setSubmitting(true);
     try {
-      const res = await fetch(`/api/workspaces/${slug}/connections`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind, name, url, extraJson: extraJson || undefined }),
-      });
+      let res: Response;
+      if (isUpload) {
+        if (!csvFile) throw new Error(`Choose a ${kind === "EXCEL" ? "spreadsheet" : "CSV"} file to upload.`);
+        const fd = new FormData();
+        fd.append("file", csvFile);
+        if (name) fd.append("name", name);
+        res = await fetch(`/api/workspaces/${slug}/connections`, {
+          method: "POST",
+          body: fd,
+        });
+      } else {
+        res = await fetch(`/api/workspaces/${slug}/connections`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ kind, name, url, extraJson: extraJson || undefined }),
+        });
+      }
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail ?? data.error ?? `Request failed (${res.status})`);
       router.push(`${base}/connections/${data.connection.id}`);
@@ -100,36 +117,76 @@ export default function NewConnectionClient() {
           <span className={styles.hint}>Shown in the data-sources list. Customers see this name; treat it as a label.</span>
         </div>
 
-        <div className={styles.field}>
-          <span className={styles.label}>Connection URL</span>
-          <input
-            className="input"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            required
-            placeholder={meta?.urlPlaceholder ?? ""}
-            style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 12 }}
-          />
-          <span className={styles.hint}>
-            {meta?.urlHelp}{" "}
-            Use a <strong>read-only role</strong>.
-          </span>
-        </div>
-
-        {meta?.extraField && (
+        {isUpload ? (
           <div className={styles.field}>
-            <span className={styles.label}>{meta.extraField.label}</span>
-            <textarea
-              className="input"
-              value={extraJson}
-              onChange={(e) => setExtraJson(e.target.value)}
-              required
-              placeholder={meta.extraField.placeholder}
-              rows={8}
-              style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11.5, resize: "vertical" }}
-            />
-            <span className={styles.hint}>{meta.extraField.help}</span>
+            <span className={styles.label}>
+              {kind === "EXCEL" ? "Excel file (.xlsx / .xls)" : "CSV file"}
+            </span>
+            <label
+              htmlFor="csv-file"
+              className={styles.kindCard}
+              style={{ display: "flex", flexDirection: "column", gap: 6, padding: 18, cursor: "pointer" }}
+            >
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <Upload size={16} style={{ color: "rgb(var(--accent))" }} />
+                <strong style={{ fontSize: 13 }}>
+                  {csvFile
+                    ? csvFile.name
+                    : kind === "EXCEL"
+                      ? "Choose an Excel file…"
+                      : "Choose a CSV file…"}
+                </strong>
+              </div>
+              {csvFile && (
+                <span className={styles.hint}>
+                  {(csvFile.size / 1024).toFixed(1)} KB · we&rsquo;ll infer column types from the first 200 rows
+                </span>
+              )}
+              <input
+                id="csv-file"
+                type="file"
+                accept={accept}
+                onChange={(e) => setCsvFile(e.target.files?.[0] ?? null)}
+                style={{ display: "none" }}
+                required
+              />
+            </label>
+            <span className={styles.hint}>{meta?.urlHelp}</span>
           </div>
+        ) : (
+          <>
+            <div className={styles.field}>
+              <span className={styles.label}>Connection URL</span>
+              <input
+                className="input"
+                value={url}
+                onChange={(e) => setUrl(e.target.value)}
+                required
+                placeholder={meta?.urlPlaceholder ?? ""}
+                style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 12 }}
+              />
+              <span className={styles.hint}>
+                {meta?.urlHelp}{" "}
+                Use a <strong>read-only role</strong>.
+              </span>
+            </div>
+
+            {meta?.extraField && (
+              <div className={styles.field}>
+                <span className={styles.label}>{meta.extraField.label}</span>
+                <textarea
+                  className="input"
+                  value={extraJson}
+                  onChange={(e) => setExtraJson(e.target.value)}
+                  required
+                  placeholder={meta.extraField.placeholder}
+                  rows={8}
+                  style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11.5, resize: "vertical" }}
+                />
+                <span className={styles.hint}>{meta.extraField.help}</span>
+              </div>
+            )}
+          </>
         )}
 
         <div className={styles.actions}>
@@ -139,9 +196,17 @@ export default function NewConnectionClient() {
           <button
             type="submit"
             className="btn btn-primary"
-            disabled={submitting || !name || !url || (!!meta?.extraField && !extraJson.trim())}
+            disabled={
+              submitting
+              || (isUpload ? !csvFile : (!name || !url || (!!meta?.extraField && !extraJson.trim())))
+            }
           >
-            {submitting ? "Testing…" : <><Check size={14} /> Test &amp; save</>}
+            {submitting
+              ? (isUpload ? "Uploading…" : "Testing…")
+              : isUpload
+                ? <><Upload size={14} /> Upload &amp; index</>
+                : <><Check size={14} /> Test &amp; save</>
+            }
           </button>
         </div>
       </form>
