@@ -16,16 +16,33 @@ const DEFAULT_SQL = `-- Return ONE row with ONE numeric column. The value become
 -- Example: total revenue this month.
 SELECT 12345.67 AS revenue_this_month`;
 
+function previewSql(kind: string, table: string): string {
+  switch (kind) {
+    case "MSSQL":
+      return `-- Preview ${table}\nSELECT TOP 50 * FROM ${table};`;
+    case "BIGQUERY":
+      return `-- Preview ${table}\nSELECT * FROM \`${table}\` LIMIT 50;`;
+    case "POWERBI":
+      return `-- Preview ${table}\nEVALUATE TOPN(50, '${table}')`;
+    case "POSTGRES":
+    case "SNOWFLAKE":
+    default:
+      return `-- Preview ${table}\nSELECT * FROM ${table} LIMIT 50;`;
+  }
+}
+
 export function ConnectionDetailClient({
   workspaceSlug,
   connectionId,
   connectionName,
+  connectionKind,
   kpiCount,
   canAdmin,
 }: {
   workspaceSlug: string;
   connectionId: string;
   connectionName: string;
+  connectionKind: string;
   kpiCount: number;
   canAdmin: boolean;
 }) {
@@ -303,11 +320,7 @@ export function ConnectionDetailClient({
               <button
                 key={t}
                 type="button"
-                onClick={() =>
-                  setSql(
-                    `-- Preview from ${t}\nSELECT COUNT(*) AS row_count FROM ${t} LIMIT 1;`
-                  )
-                }
+                onClick={() => setSql(previewSql(connectionKind, t))}
                 title="Click to seed a sample query"
               >
                 {t}

@@ -49,6 +49,7 @@ export default async function ConnectionDetail({
         workspaceSlug={params.slug}
         connectionId={conn.id}
         connectionName={conn.name}
+        connectionKind={conn.kind}
         kpiCount={conn._count.kpis}
         canAdmin={(await getWorkspaceAccess(params.slug))?.canAdmin ?? false}
       />
