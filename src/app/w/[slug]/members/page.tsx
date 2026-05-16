@@ -19,7 +19,7 @@ export default async function MembersPage({ params }: { params: { slug: string }
   const [members, invitations] = await Promise.all([
     prisma.membership.findMany({
       where: { workspaceId: ws.id },
-      include: { user: { select: { name: true, email: true, image: true } } },
+      include: { user: { select: { id: true, name: true, email: true, image: true } } },
       orderBy: { createdAt: "asc" },
     }),
     prisma.invitation.findMany({
@@ -27,6 +27,7 @@ export default async function MembersPage({ params }: { params: { slug: string }
       orderBy: { createdAt: "desc" },
     }),
   ]);
+  const adminCount = members.filter((m) => m.role === "ADMIN").length;
 
   const base = `/w/${params.slug}`;
   return (
@@ -50,8 +51,10 @@ export default async function MembersPage({ params }: { params: { slug: string }
       <MembersClient
         workspaceSlug={params.slug}
         canAdmin={access.canAdmin}
+        adminCount={adminCount}
         members={members.map((m) => ({
           id: m.id,
+          userId: m.user.id,
           role: m.role,
           name: m.user.name,
           email: m.user.email,

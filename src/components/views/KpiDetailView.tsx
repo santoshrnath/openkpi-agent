@@ -14,6 +14,7 @@ import {
   AlertCircle,
   RefreshCw,
   Wand2,
+  Trash2,
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -41,9 +42,11 @@ interface Props {
   nextDueIso?: string | null;
   /** Viewer is a member with at least EDITOR role. */
   canEdit?: boolean;
+  /** Viewer is STEWARD or ADMIN — can delete this KPI. */
+  canDelete?: boolean;
 }
 
-export function KpiDetailView({ workspaceSlug, kpi, aiHint, isLive, lastRefreshIso, nextDueIso, canEdit }: Props) {
+export function KpiDetailView({ workspaceSlug, kpi, aiHint, isLive, lastRefreshIso, nextDueIso, canEdit, canDelete }: Props) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Overview");
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
@@ -87,6 +90,27 @@ export function KpiDetailView({ workspaceSlug, kpi, aiHint, isLive, lastRefreshI
   }
 
   const needsDocs = !kpi.definition || !kpi.formula || !kpi.limitations;
+
+  const [deleting, setDeleting] = useState(false);
+  async function deleteKpi() {
+    if (!confirm(`Delete "${kpi.name}"? This removes the KPI, its history, lineage and AI conversations. No undo.`)) return;
+    setDeleting(true);
+    try {
+      const r = await fetch(`/api/workspaces/${workspaceSlug}/kpis/${kpi.id}`, {
+        method: "DELETE",
+      });
+      if (!r.ok) {
+        const data = await r.json().catch(() => ({}));
+        alert(data.detail ?? data.error ?? `Delete failed (${r.status})`);
+        setDeleting(false);
+        return;
+      }
+      router.push(`/w/${workspaceSlug}/catalog`);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : String(e));
+      setDeleting(false);
+    }
+  }
 
   async function patch(payload: Record<string, unknown>) {
     const r = await fetch(`/api/workspaces/${workspaceSlug}/kpis/${kpi.id}`, {
@@ -191,6 +215,20 @@ export function KpiDetailView({ workspaceSlug, kpi, aiHint, isLive, lastRefreshI
           </Link>
           <button className="btn btn-ghost"><Share2 size={14} /> Share</button>
           <button className="btn btn-primary"><Download size={14} /> Export</button>
+          {canDelete && (
+            <button
+              onClick={deleteKpi}
+              disabled={deleting}
+              className="btn btn-ghost"
+              style={{
+                color: "rgb(190,18,60)",
+                borderColor: "rgba(225,29,72,0.4)",
+              }}
+              title="Delete this KPI"
+            >
+              <Trash2 size={14} /> {deleting ? "Deleting…" : "Delete"}
+            </button>
+          )}
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { ChevronRight, Database } from "lucide-react";
 import { Hero } from "@/components/layout/Hero";
 import { prisma } from "@/lib/db";
 import { getWorkspaceBySlug } from "@/lib/queries";
+import { getWorkspaceAccess } from "@/lib/acl";
 import { ConnectionDetailClient } from "./ConnectionDetailClient";
 
 export const dynamic = "force-dynamic";
@@ -47,7 +48,9 @@ export default async function ConnectionDetail({
       <ConnectionDetailClient
         workspaceSlug={params.slug}
         connectionId={conn.id}
+        connectionName={conn.name}
         kpiCount={conn._count.kpis}
+        canAdmin={(await getWorkspaceAccess(params.slug))?.canAdmin ?? false}
       />
     </>
   );

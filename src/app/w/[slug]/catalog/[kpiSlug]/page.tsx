@@ -24,6 +24,8 @@ export default async function KpiDetail({
   const nextDueIso = nextDue ? nextDue.toISOString() : null;
   const access = await getWorkspaceAccess(params.slug);
   const canEdit = access?.canEdit ?? false;
+  const canDelete =
+    access?.role === "ADMIN" || access?.role === "STEWARD";
   return (
     <KpiDetailView
       workspaceSlug={params.slug}
@@ -33,6 +35,7 @@ export default async function KpiDetail({
       lastRefreshIso={lastRefreshIso}
       nextDueIso={nextDueIso}
       canEdit={canEdit}
+      canDelete={canDelete}
     />
   );
 }

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Play, Save, ArrowRight, ListTree } from "lucide-react";
+import { Play, Save, ArrowRight, ListTree, Trash2 } from "lucide-react";
 import styles from "../page.module.css";
 
 interface QueryResult {
@@ -19,11 +19,15 @@ SELECT 12345.67 AS revenue_this_month`;
 export function ConnectionDetailClient({
   workspaceSlug,
   connectionId,
+  connectionName,
   kpiCount,
+  canAdmin,
 }: {
   workspaceSlug: string;
   connectionId: string;
+  connectionName: string;
   kpiCount: number;
+  canAdmin: boolean;
 }) {
   const router = useRouter();
   const base = `/w/${workspaceSlug}`;
@@ -76,6 +80,29 @@ export function ConnectionDetailClient({
       setQueryErr(e instanceof Error ? e.message : String(e));
     } finally {
       setQueryLoading(false);
+    }
+  }
+
+  const [deleting, setDeleting] = useState(false);
+  async function deleteConnection() {
+    const msg =
+      kpiCount > 0
+        ? `Delete "${connectionName}"? ${kpiCount} KPI${kpiCount === 1 ? "" : "s"} backed by this connection will stop auto-refreshing but their metadata + history survive (you can re-attach by creating a new connection). No undo.`
+        : `Delete "${connectionName}"? No undo.`;
+    if (!confirm(msg)) return;
+    setDeleting(true);
+    try {
+      const r = await fetch(apiBase, { method: "DELETE" });
+      if (!r.ok) {
+        const data = await r.json().catch(() => ({}));
+        alert(data.detail ?? data.error ?? `Delete failed (${r.status})`);
+        setDeleting(false);
+        return;
+      }
+      router.push(`${base}/connections`);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : String(e));
+      setDeleting(false);
     }
   }
 
@@ -239,6 +266,38 @@ export function ConnectionDetailClient({
           Every query runs in a read-only transaction with a 10-second statement
           timeout.
         </div>
+
+        {canAdmin && (
+          <div style={{ marginTop: 18, paddingTop: 14, borderTop: "1px solid rgb(var(--border-soft))" }}>
+            <button
+              type="button"
+              onClick={deleteConnection}
+              disabled={deleting}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 8,
+                padding: "7px 12px",
+                fontSize: 12,
+                fontWeight: 600,
+                borderRadius: 8,
+                background: "transparent",
+                color: "rgb(190,18,60)",
+                border: "1px solid rgba(225,29,72,0.4)",
+                cursor: deleting ? "not-allowed" : "pointer",
+                opacity: deleting ? 0.6 : 1,
+              }}
+              title={kpiCount > 0
+                ? `Removes this connection; ${kpiCount} KPI${kpiCount === 1 ? "" : "s"} stop auto-refreshing but survive as static`
+                : "Delete this connection"}
+            >
+              <Trash2 size={12} /> {deleting ? "Deleting…" : "Delete connection"}
+            </button>
+            <div style={{ fontSize: 11, color: "rgb(var(--text-soft))", marginTop: 6 }}>
+              Admin only · audit-logged.
+            </div>
+          </div>
+        )}
 
         <h3 style={{ marginTop: 24 }}>
           <ListTree size={14} style={{ display: "inline", marginRight: 6, color: "rgb(var(--accent))" }} />
