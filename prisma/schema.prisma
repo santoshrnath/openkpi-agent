@@ -196,9 +196,11 @@ model Kpi {
   history       KpiHistoryPoint[]
   conversations AiConversation[]
   lineageFlow   LineageFlow?
-  /// optional link to the live data source backing this KPI (Phase B)
+  /// optional link to the live data source backing this KPI (Phase B).
+  /// onDelete: SetNull so removing a connection drops its refresh hook on
+  /// each KPI but keeps the KPI metadata + history intact.
   connectionId  String?
-  connection    SourceConnection? @relation(fields: [connectionId], references: [id])
+  connection    SourceConnection? @relation(fields: [connectionId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

@@ -70,3 +70,49 @@ export async function PATCH(
 
   return NextResponse.json({ slug: updated.slug, ok: true });
 }
+
+/**
+ * DELETE /api/workspaces/[slug]/kpis/[kpiSlug]
+ *
+ * Removes a KPI. Cascades drop its history, lineage flow, and AI
+ * conversations. Steward+ only — a regular editor can flip status and edit
+ * fields but shouldn't be able to wipe a board-grade metric.
+ */
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: { slug: string; kpiSlug: string } }
+) {
+  const gate = await gateEdit(params.slug);
+  if (gate instanceof NextResponse) return gate;
+  const role = (gate as { role?: string }).role;
+  if (role !== "ADMIN" && role !== "STEWARD") {
+    return NextResponse.json(
+      { error: "Only ADMIN or STEWARD members can delete a KPI." },
+      { status: 403 }
+    );
+  }
+
+  const ws = await prisma.workspace.findUnique({ where: { slug: params.slug } });
+  if (!ws) return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
+
+  const kpi = await prisma.kpi.findUnique({
+    where: { workspaceId_slug: { workspaceId: ws.id, slug: params.kpiSlug } },
+  });
+  if (!kpi) return NextResponse.json({ error: "KPI not found" }, { status: 404 });
+
+  await prisma.kpi.delete({ where: { id: kpi.id } });
+
+  await prisma.auditEvent
+    .create({
+      data: {
+        workspaceId: ws.id,
+        action: "kpi.delete",
+        targetType: "kpi",
+        targetId: kpi.id,
+        metadata: { slug: kpi.slug, name: kpi.name },
+      },
+    })
+    .catch(() => undefined);
+
+  return NextResponse.json({ ok: true, deleted: kpi.slug });
+}

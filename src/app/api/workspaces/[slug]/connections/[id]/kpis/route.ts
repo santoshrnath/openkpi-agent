@@ -92,14 +92,23 @@ export async function POST(
     );
   }
 
-  // Slug — make unique within workspace
-  let slug = slugify(body.name);
-  let n = 1;
-  while (await prisma.kpi.findUnique({
-    where: { workspaceId_slug: { workspaceId: ws.id, slug } },
-  })) {
-    n += 1;
-    slug = `${slugify(body.name)}-${n}`;
+  // Slug — make unique within workspace. Single batch query against all
+  // candidate suffixes (-2, -3, …, -10) instead of an N+1 loop hitting the
+  // DB once per collision.
+  const base = slugify(body.name);
+  const candidates = [base, ...Array.from({ length: 50 }, (_, i) => `${base}-${i + 2}`)];
+  const taken = new Set(
+    (
+      await prisma.kpi.findMany({
+        where: { workspaceId: ws.id, slug: { in: candidates } },
+        select: { slug: true },
+      })
+    ).map((r) => r.slug)
+  );
+  let slug = candidates.find((c) => !taken.has(c));
+  if (!slug) {
+    // Fallback: append a 6-char random suffix.
+    slug = `${base}-${Math.random().toString(36).slice(2, 8)}`;
   }
 
   const kpi = await prisma.kpi.create({

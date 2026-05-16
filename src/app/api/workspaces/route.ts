@@ -52,19 +52,32 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const ws = await prisma.workspace.create({
-    data: {
-      slug: body.slug,
-      name: body.name,
-      tagline: body.tagline,
-      currency: body.currency ?? "USD",
-      visibility: (body.visibility ?? "PRIVATE") as Visibility,
-      // If we know the creator, make them admin so they own this workspace.
-      memberships: viewer.userId
-        ? { create: { userId: viewer.userId, role: Role.ADMIN } }
-        : undefined,
-    },
-  });
+  let ws;
+  try {
+    ws = await prisma.workspace.create({
+      data: {
+        slug: body.slug,
+        name: body.name,
+        tagline: body.tagline,
+        currency: body.currency ?? "USD",
+        visibility: (body.visibility ?? "PRIVATE") as Visibility,
+        // creator becomes admin so they own this workspace
+        memberships: { create: { userId: viewer.userId, role: Role.ADMIN } },
+      },
+    });
+  } catch (e) {
+    // Race: between the findUnique above and now, another request grabbed
+    // the same slug. Catch Prisma's unique-constraint error (P2002) and
+    // return a friendly 409 instead of a 500.
+    const code = (e as { code?: string })?.code;
+    if (code === "P2002") {
+      return NextResponse.json(
+        { error: "Slug already in use. Pick another." },
+        { status: 409 }
+      );
+    }
+    throw e;
+  }
 
   await prisma.auditEvent
     .create({

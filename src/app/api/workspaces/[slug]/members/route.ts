@@ -9,7 +9,9 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(_req: NextRequest, { params }: { params: { slug: string } }) {
-  const gate = await gateView(params.slug);
+  // gateEdit, not gateView: even on PUBLIC workspaces, member emails are
+  // sensitive — only people who can already edit should see the roster.
+  const gate = await gateEdit(params.slug);
   if (gate instanceof NextResponse) return gate;
   const ws = await prisma.workspace.findUnique({ where: { slug: params.slug } });
   if (!ws) return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
