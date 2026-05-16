@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { cx } from "@/lib/utils";
 import styles from "./TrendChart.module.css";
 
 interface Point {
@@ -15,6 +16,23 @@ interface Props {
   positive?: boolean;
 }
 
+type Period = "All" | "12m" | "6m" | "3m" | "YTD";
+const PERIODS: Period[] = ["All", "12m", "6m", "3m", "YTD"];
+
+function applyPeriod(data: Point[], period: Period): Point[] {
+  if (period === "All") return data;
+  if (period === "YTD") {
+    // Period strings look like "May 26" — take everything matching the latest year suffix.
+    const latest = data[data.length - 1]?.period ?? "";
+    const yearSuffix = latest.split(" ").pop() ?? "";
+    if (!yearSuffix) return data;
+    return data.filter((p) => p.period.endsWith(yearSuffix));
+  }
+  // 3m / 6m / 12m: just slice the tail.
+  const months = period === "3m" ? 3 : period === "6m" ? 6 : 12;
+  return data.slice(-months);
+}
+
 export function TrendChart({
   data,
   formatValue = (n) => n.toFixed(1),
@@ -22,6 +40,10 @@ export function TrendChart({
   positive = true,
 }: Props) {
   const [hover, setHover] = useState<number | null>(null);
+  const [period, setPeriod] = useState<Period>("All");
+  const filtered = useMemo(() => applyPeriod(data, period), [data, period]);
+  // ⚠️  Reassign locally so the rest of the body uses the filtered slice.
+  const sliced = filtered.length > 0 ? filtered : data;
 
   const width = 720; // viewBox width, will scale
   const padX = 36;
@@ -30,13 +52,13 @@ export function TrendChart({
   const innerW = width - padX * 2;
   const innerH = height - padTop - padBottom;
 
-  const values = data.map((d) => d.value);
+  const values = sliced.map((d) => d.value);
   const min = Math.min(...values);
   const max = Math.max(...values);
   const range = max - min || 1;
-  const stepX = innerW / (data.length - 1 || 1);
+  const stepX = innerW / (sliced.length - 1 || 1);
 
-  const points = data.map((d, i) => {
+  const points = sliced.map((d, i) => {
     const x = padX + i * stepX;
     const y = padTop + innerH - ((d.value - min) / range) * innerH;
     return { x, y, ...d };
@@ -52,6 +74,20 @@ export function TrendChart({
   const gridY = 4;
 
   return (
+    <div>
+      <div className={styles.periodBar}>
+        {PERIODS.map((p) => (
+          <button
+            key={p}
+            type="button"
+            onClick={() => { setPeriod(p); setHover(null); }}
+            className={cx(styles.periodBtn, period === p && styles.active)}
+            title={`Show ${p === "All" ? "all periods" : p === "YTD" ? "year-to-date" : `last ${p}`}`}
+          >
+            {p}
+          </button>
+        ))}
+      </div>
     <div className={styles.wrap} style={{ height }}>
       <svg
         viewBox={`0 0 ${width} ${height}`}
@@ -150,6 +186,7 @@ export function TrendChart({
           </span>
         </div>
       )}
+    </div>
     </div>
   );
 }

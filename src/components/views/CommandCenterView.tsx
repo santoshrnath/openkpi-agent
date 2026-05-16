@@ -16,6 +16,7 @@ import {
 import { Hero } from "@/components/layout/Hero";
 import { KPICard } from "@/components/kpi/KPICard";
 import { SummaryCard } from "@/components/kpi/SummaryCard";
+import { Onboarding } from "@/components/views/Onboarding";
 import { useTheme } from "@/components/providers/ThemeProvider";
 import { cx } from "@/lib/utils";
 import { KPI } from "@/types";
@@ -133,18 +134,19 @@ export function CommandCenterView({
         }
       />
 
-      {kpis.length === 0 && (
+      {kpis.length === 0 && canEdit && (
+        <Onboarding workspaceSlug={workspaceSlug} workspaceName={workspaceName} />
+      )}
+
+      {kpis.length === 0 && !canEdit && (
         <div className={styles.banner}>
           <div className={styles.bannerIcon}>
             <Upload size={16} />
           </div>
           <div className={styles.bannerText}>
             <span className={styles.bannerStrong}>This workspace is empty.</span>{" "}
-            Upload a CSV of your KPI definitions to populate it.
+            Sign in as a member to populate it.
           </div>
-          <Link href={`${baseHref}/import`} className="btn btn-soft btn-sm">
-            Upload CSV
-          </Link>
         </div>
       )}
 
