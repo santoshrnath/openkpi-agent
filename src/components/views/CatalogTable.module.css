@@ -1,0 +1,131 @@
+.scroller {
+  padding: 0;
+  overflow-x: auto;
+}
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 920px;
+}
+.th {
+  position: sticky;
+  top: 0;
+  background: rgb(var(--surface));
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgb(var(--text-soft));
+  padding: 12px 14px;
+  border-bottom: 1px solid rgb(var(--border-soft));
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+}
+.th:hover { color: rgb(var(--text)); }
+.thSorted {
+  color: rgb(var(--accent));
+}
+.thArrow {
+  font-size: 9px;
+  margin-left: 4px;
+  display: inline-block;
+  width: 8px;
+}
+.thStatic {
+  cursor: default;
+}
+.thStatic:hover { color: rgb(var(--text-soft)); }
+
+.row {
+  border-bottom: 1px solid rgb(var(--border-soft));
+  transition: background 0.12s;
+}
+.row:hover {
+  background: rgb(var(--surface-2));
+}
+.row:last-child { border-bottom: none; }
+
+.cell {
+  padding: 11px 14px;
+  vertical-align: middle;
+  color: rgb(var(--text));
+}
+.cell.numeric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+.kpiName {
+  font-weight: 600;
+  color: rgb(var(--text));
+  font-size: 13.5px;
+}
+.kpiDomain {
+  font-size: 11px;
+  color: rgb(var(--text-soft));
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin-top: 2px;
+}
+.nameCell {
+  min-width: 220px;
+}
+.linkAway {
+  color: inherit;
+  text-decoration: none;
+  display: block;
+}
+.linkAway:hover .kpiName { color: rgb(var(--accent)); }
+
+.deltaUp   { color: rgb(5,150,105); font-weight: 600; }
+.deltaDown { color: rgb(225,29,72); font-weight: 600; }
+.deltaFlat { color: rgb(var(--text-soft)); }
+
+.confidence {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+.confDot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; }
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.viewToggle {
+  display: inline-flex;
+  background: rgb(var(--surface-2));
+  border-radius: 10px;
+  padding: 3px;
+  gap: 2px;
+}
+.viewBtn {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgb(var(--text-muted));
+  border-radius: 7px;
+  cursor: pointer;
+  border: 0;
+  background: transparent;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.viewBtn.active {
+  background: rgb(var(--surface));
+  color: rgb(var(--text));
+  box-shadow: 0 1px 2px rgb(var(--shadow));
+}
+.countBadge {
+  font-size: 12px;
+  color: rgb(var(--text-soft));
+}

@@ -1,16 +1,21 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, LayoutGrid, Rows3 } from "lucide-react";
 import { Hero } from "@/components/layout/Hero";
 import { KPICard } from "@/components/kpi/KPICard";
+import { CatalogTable } from "./CatalogTable";
 import { cx } from "@/lib/utils";
 import { KPI } from "@/types";
-import styles from "@/app/page.module.css";
+import pageStyles from "@/app/page.module.css";
+import tableStyles from "./CatalogTable.module.css";
 
 const DOMAINS = ["All","Finance","HR","Procurement","Operations","Sales","Data"] as const;
 type Domain = (typeof DOMAINS)[number];
+type ViewMode = "grid" | "table";
+
+const STORAGE_KEY = "openkpi.catalog.view";
 
 export function CatalogView({
   workspaceSlug,
@@ -23,6 +28,20 @@ export function CatalogView({
 }) {
   const [domain, setDomain] = useState<Domain>("All");
   const [search, setSearch] = useState("");
+  const [view, setView] = useState<ViewMode>("grid");
+
+  // Restore preference after hydration so SSR HTML matches first paint.
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored === "grid" || stored === "table") setView(stored);
+    } catch { /* ignore */ }
+  }, []);
+
+  function setViewPersist(v: ViewMode) {
+    setView(v);
+    try { localStorage.setItem(STORAGE_KEY, v); } catch { /* ignore */ }
+  }
 
   const filtered = useMemo(() =>
     kpis.filter((k) => {
@@ -65,8 +84,8 @@ export function CatalogView({
         }
       />
 
-      <div className={styles.filterBar}>
-        <div className={styles.chips}>
+      <div className={pageStyles.filterBar}>
+        <div className={pageStyles.chips}>
           {DOMAINS.map((d) => (
             <button
               key={d}
@@ -77,15 +96,37 @@ export function CatalogView({
             </button>
           ))}
         </div>
-        <div style={{ fontSize: 12, color: "rgb(var(--text-soft))" }}>
-          Showing {filtered.length} of {kpis.length}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span className={tableStyles.countBadge}>
+            Showing {filtered.length} of {kpis.length}
+          </span>
+          <div className={tableStyles.viewToggle}>
+            <button
+              type="button"
+              onClick={() => setViewPersist("grid")}
+              className={cx(tableStyles.viewBtn, view === "grid" && tableStyles.active)}
+              title="Grid view"
+            >
+              <LayoutGrid size={14} /> Grid
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewPersist("table")}
+              className={cx(tableStyles.viewBtn, view === "table" && tableStyles.active)}
+              title="Table view"
+            >
+              <Rows3 size={14} /> Table
+            </button>
+          </div>
         </div>
       </div>
 
       {filtered.length === 0 ? (
-        <div className={`card ${styles.empty}`}>No KPIs match the current filter.</div>
+        <div className={`card ${pageStyles.empty}`}>No KPIs match the current filter.</div>
+      ) : view === "table" ? (
+        <CatalogTable workspaceSlug={workspaceSlug} kpis={filtered} canEdit={canEdit} />
       ) : (
-        <div className={styles.grid}>
+        <div className={pageStyles.grid}>
           {filtered.map((k) => (
             <KPICard key={k.id} kpi={k} workspaceSlug={workspaceSlug} canEdit={canEdit} />
           ))}
