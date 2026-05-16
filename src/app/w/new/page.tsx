@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { Sparkles, LogIn } from "lucide-react";
 import styles from "./page.module.css";
 
 function slugify(s: string) {
@@ -18,6 +19,44 @@ function slugify(s: string) {
 
 export default function NewWorkspacePage() {
   const router = useRouter();
+  const { data: session, status } = useSession();
+
+  if (status === "loading") {
+    return (
+      <div className={styles.shell}>
+        <div className={`card ${styles.card}`}>Loading…</div>
+      </div>
+    );
+  }
+
+  if (!session?.user) {
+    return (
+      <div className={styles.shell}>
+        <div className={`card ${styles.card}`}>
+          <h1 className={styles.title}>
+            <Sparkles size={20} style={{ display: "inline", marginRight: 8, color: "rgb(var(--accent))" }} />
+            Create a workspace
+          </h1>
+          <p className={styles.sub}>
+            Sign in to create your own private workspace.
+          </p>
+          <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+            <Link href={`/login?callbackUrl=${encodeURIComponent("/w/new")}`} className="btn btn-primary">
+              <LogIn size={14} /> Sign in
+            </Link>
+            <Link href="/w/demo" className="btn btn-ghost">
+              ← Back to the public demo
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return <NewWorkspaceForm router={router} />;
+}
+
+function NewWorkspaceForm({ router }: { router: ReturnType<typeof useRouter> }) {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [tagline, setTagline] = useState("");

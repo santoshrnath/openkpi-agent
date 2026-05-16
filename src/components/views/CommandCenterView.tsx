@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   BookMarked,
   CheckCircle2,
@@ -10,6 +11,7 @@ import {
   Sparkles,
   Filter,
   Upload,
+  Wand2,
 } from "lucide-react";
 import { Hero } from "@/components/layout/Hero";
 import { KPICard } from "@/components/kpi/KPICard";
@@ -47,9 +49,39 @@ export function CommandCenterView({
   kpis,
 }: Props) {
   const { settings } = useTheme();
+  const router = useRouter();
   const [domain, setDomain] = useState<Domain>("All");
   const [status, setStatus] = useState<Status>("All");
   const [search, setSearch] = useState("");
+  const [autoDocBusy, setAutoDocBusy] = useState(false);
+  const [autoDocResult, setAutoDocResult] = useState<string | null>(null);
+
+  const undocumented = useMemo(
+    () => kpis.filter((k) => !k.definition || !k.formula || !k.limitations).length,
+    [kpis]
+  );
+
+  async function runAutoDocument() {
+    setAutoDocBusy(true);
+    setAutoDocResult(null);
+    try {
+      const r = await fetch(`/api/workspaces/${workspaceSlug}/autodocument`, { method: "POST" });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.detail ?? data.error ?? `Request failed (${r.status})`);
+      setAutoDocResult(
+        `Filled ${data.filled} KPI${data.filled === 1 ? "" : "s"}` +
+          (data.errors?.length ? ` · ${data.errors.length} errors` : "") +
+          (data.scanned > data.filled + (data.skipped ?? 0)
+            ? ` · ${data.scanned - data.filled - (data.skipped ?? 0)} skipped`
+            : "")
+      );
+      router.refresh();
+    } catch (e) {
+      setAutoDocResult(`Error: ${e instanceof Error ? e.message : String(e)}`);
+    } finally {
+      setAutoDocBusy(false);
+    }
+  }
 
   const filtered = useMemo(() => {
     return kpis.filter((k) => {
@@ -111,6 +143,32 @@ export function CommandCenterView({
           <Link href={`${baseHref}/import`} className="btn btn-soft btn-sm">
             Upload CSV
           </Link>
+        </div>
+      )}
+
+      {kpis.length > 0 && undocumented > 0 && (
+        <div className={styles.banner}>
+          <div className={styles.bannerIcon}>
+            <Wand2 size={16} />
+          </div>
+          <div className={styles.bannerText}>
+            <span className={styles.bannerStrong}>
+              {undocumented} KPI{undocumented === 1 ? " is" : "s are"} missing documentation.
+            </span>{" "}
+            Claude can draft a starter definition, formula and limitations for each — your stewards can review and certify after.
+            {autoDocResult && (
+              <div style={{ marginTop: 6, fontSize: 12, color: "rgb(var(--text-muted))" }}>
+                {autoDocResult}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={runAutoDocument}
+            disabled={autoDocBusy}
+            className="btn btn-primary btn-sm"
+          >
+            <Wand2 size={14} /> {autoDocBusy ? "Drafting…" : "Auto-document with AI"}
+          </button>
         </div>
       )}
 

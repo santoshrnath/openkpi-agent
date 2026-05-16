@@ -13,6 +13,7 @@ import {
   Layers,
   AlertCircle,
   RefreshCw,
+  Wand2,
 } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -60,6 +61,28 @@ export function KpiDetailView({ workspaceSlug, kpi, aiHint, isLive, lastRefreshI
       setRefreshing(false);
     }
   }
+
+  const [suggesting, setSuggesting] = useState(false);
+  async function suggest() {
+    setSuggesting(true);
+    try {
+      const r = await fetch(`/api/workspaces/${workspaceSlug}/kpis/${kpi.id}/suggest`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}), // default: fill only blanks
+      });
+      const data = await r.json();
+      if (!r.ok) {
+        alert(data.detail ?? data.error ?? `Suggest failed (${r.status})`);
+      } else {
+        router.refresh();
+      }
+    } finally {
+      setSuggesting(false);
+    }
+  }
+
+  const needsDocs = !kpi.definition || !kpi.formula || !kpi.limitations;
 
   return (
     <>
@@ -129,6 +152,16 @@ export function KpiDetailView({ workspaceSlug, kpi, aiHint, isLive, lastRefreshI
                 {refreshing ? "Refreshing…" : "Refresh now"}
               </button>
             </>
+          )}
+          {needsDocs && (
+            <button
+              onClick={suggest}
+              disabled={suggesting}
+              className="btn btn-soft"
+              title="Have Claude draft missing definition / formula / limitations"
+            >
+              <Wand2 size={14} /> {suggesting ? "Drafting…" : "Suggest with AI"}
+            </button>
           )}
           <Link href={`${base}/lineage?kpi=${kpi.id}`} className="btn btn-ghost">
             <Layers size={14} /> View lineage

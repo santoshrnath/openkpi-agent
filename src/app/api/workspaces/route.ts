@@ -45,6 +45,12 @@ export async function POST(req: NextRequest) {
   }
 
   const viewer = await getViewer();
+  if (!viewer.userId) {
+    return NextResponse.json(
+      { error: "Sign in required to create a workspace." },
+      { status: 401 }
+    );
+  }
 
   const ws = await prisma.workspace.create({
     data: {
