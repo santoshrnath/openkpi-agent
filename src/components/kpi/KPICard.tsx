@@ -11,10 +11,18 @@ import {
 import { KPI } from "@/types";
 import { Sparkline } from "@/components/charts/Sparkline";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { KpiStatusMenu } from "@/components/kpi/KpiStatusMenu";
 import { formatChange, formatKPIValue } from "@/lib/utils";
 import styles from "./KPICard.module.css";
 
-export function KPICard({ kpi, workspaceSlug }: { kpi: KPI; workspaceSlug?: string }) {
+interface Props {
+  kpi: KPI;
+  workspaceSlug?: string;
+  /** When true and a workspaceSlug is set, the status badge becomes an inline menu. */
+  canEdit?: boolean;
+}
+
+export function KPICard({ kpi, workspaceSlug, canEdit }: Props) {
   const detailHref = workspaceSlug ? `/w/${workspaceSlug}/catalog/${kpi.id}` : `/catalog/${kpi.id}`;
   const good =
     kpi.goodWhen === "up"
@@ -73,7 +81,16 @@ export function KPICard({ kpi, workspaceSlug }: { kpi: KPI; workspaceSlug?: stri
       </div>
 
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-        <StatusBadge status={kpi.status} />
+        {workspaceSlug ? (
+          <KpiStatusMenu
+            workspaceSlug={workspaceSlug}
+            kpiSlug={kpi.id}
+            status={kpi.status}
+            canEdit={!!canEdit}
+          />
+        ) : (
+          <StatusBadge status={kpi.status} />
+        )}
         <span className={styles.confidence} style={{ color: confColor }}>
           <span className={styles.confDot} style={{ background: confColor }} />
           {conf}% confidence

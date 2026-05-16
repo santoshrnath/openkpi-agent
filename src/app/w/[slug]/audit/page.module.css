@@ -1,0 +1,118 @@
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: rgb(var(--text-soft));
+}
+
+.filterBar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.filterChips {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.table {
+  padding: 0;
+  overflow: hidden;
+}
+.row {
+  display: grid;
+  grid-template-columns: 36px 1fr 160px 160px;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 20px;
+  border-bottom: 1px solid rgb(var(--border-soft));
+}
+.row:last-child { border-bottom: none; }
+@media (max-width: 800px) {
+  .row {
+    grid-template-columns: 36px 1fr;
+  }
+  .row .when, .row .who {
+    grid-column: 2 / -1;
+    font-size: 11px;
+    color: rgb(var(--text-soft));
+  }
+}
+
+.iconCell {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: grid;
+  place-items: center;
+}
+.toneInfo   { background: rgb(var(--accent-soft)); color: rgb(var(--accent)); }
+.toneGood   { background: rgba(16,185,129,0.12);  color: rgb(5,150,105); }
+.toneWarn   { background: rgba(245,158,11,0.12);  color: rgb(180,83,9); }
+.toneDanger { background: rgba(225,29,72,0.12);   color: rgb(190,18,60); }
+
+.title {
+  font-weight: 600;
+  font-size: 13.5px;
+  color: rgb(var(--text));
+}
+.detail {
+  font-size: 12px;
+  color: rgb(var(--text-muted));
+  line-height: 1.4;
+  margin-top: 2px;
+  /* truncate overly long JSON dumps gracefully */
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.who {
+  font-size: 12px;
+  color: rgb(var(--text-muted));
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.avatar {
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #d946ef, rgb(var(--accent)));
+  color: #fff;
+  display: grid;
+  place-items: center;
+  font-size: 10px;
+  font-weight: 600;
+}
+.system {
+  font-size: 11px;
+  color: rgb(var(--text-soft));
+  font-style: italic;
+}
+.when {
+  font-size: 12px;
+  color: rgb(var(--text-soft));
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  text-align: right;
+}
+
+.empty {
+  padding: 60px 24px;
+  text-align: center;
+  color: rgb(var(--text-muted));
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}

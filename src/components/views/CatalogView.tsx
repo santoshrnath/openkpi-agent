@@ -15,9 +15,11 @@ type Domain = (typeof DOMAINS)[number];
 export function CatalogView({
   workspaceSlug,
   kpis,
+  canEdit,
 }: {
   workspaceSlug: string;
   kpis: KPI[];
+  canEdit?: boolean;
 }) {
   const [domain, setDomain] = useState<Domain>("All");
   const [search, setSearch] = useState("");
@@ -85,7 +87,7 @@ export function CatalogView({
       ) : (
         <div className={styles.grid}>
           {filtered.map((k) => (
-            <KPICard key={k.id} kpi={k} workspaceSlug={workspaceSlug} />
+            <KPICard key={k.id} kpi={k} workspaceSlug={workspaceSlug} canEdit={canEdit} />
           ))}
         </div>
       )}

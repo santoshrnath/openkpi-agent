@@ -40,6 +40,7 @@ interface Props {
   workspaceName: string;
   workspaceTagline?: string | null;
   kpis: KPI[];
+  canEdit?: boolean;
 }
 
 export function CommandCenterView({
@@ -47,6 +48,7 @@ export function CommandCenterView({
   workspaceName,
   workspaceTagline,
   kpis,
+  canEdit,
 }: Props) {
   const { settings } = useTheme();
   const router = useRouter();
@@ -254,7 +256,7 @@ export function CommandCenterView({
       ) : (
         <div className={styles.grid}>
           {filtered.map((k) => (
-            <KPICard key={k.id} kpi={k} workspaceSlug={workspaceSlug} />
+            <KPICard key={k.id} kpi={k} workspaceSlug={workspaceSlug} canEdit={canEdit} />
           ))}
         </div>
       )}

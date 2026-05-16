@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { TrendChart } from "@/components/charts/TrendChart";
 import { ConfidenceDial } from "@/components/ui/ConfidenceDial";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { KpiStatusMenu } from "@/components/kpi/KpiStatusMenu";
 import { InlineText, InlineTextarea } from "@/components/ui/InlineEdit";
 import { formatKPIValue } from "@/lib/utils";
 import { cx } from "@/lib/utils";
@@ -113,7 +114,13 @@ export function KpiDetailView({ workspaceSlug, kpi, aiHint, isLive, lastRefreshI
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>
-            {kpi.name} <StatusBadge status={kpi.status} />
+            {kpi.name}{" "}
+            <KpiStatusMenu
+              workspaceSlug={workspaceSlug}
+              kpiSlug={kpi.id}
+              status={kpi.status}
+              canEdit={!!canEdit}
+            />
           </h1>
           <div className={styles.subline}>
             <span>

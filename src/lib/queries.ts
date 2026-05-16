@@ -54,6 +54,55 @@ export async function getLineageFlowsForWorkspace(slug: string) {
   });
 }
 
+export interface AuditQuery {
+  workspaceSlug: string;
+  /** Filter by action exact match (e.g. "kpi.refresh"). Omit for all. */
+  action?: string;
+  /** Substring search over action / targetId. */
+  q?: string;
+  cursor?: string; // event id to start after
+  take?: number;   // default 50
+}
+
+export async function listAuditEvents(opts: AuditQuery) {
+  const ws = await prisma.workspace.findUnique({ where: { slug: opts.workspaceSlug } });
+  if (!ws) return null;
+
+  const where: Record<string, unknown> = { workspaceId: ws.id };
+  if (opts.action) where.action = opts.action;
+  if (opts.q) {
+    where.OR = [
+      { action: { contains: opts.q, mode: "insensitive" } },
+      { targetId: { contains: opts.q, mode: "insensitive" } },
+    ];
+  }
+
+  const take = Math.min(opts.take ?? 50, 200);
+  const rows = await prisma.auditEvent.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    take: take + 1,
+    cursor: opts.cursor ? { id: opts.cursor } : undefined,
+    skip: opts.cursor ? 1 : 0,
+    include: { user: { select: { name: true, email: true, image: true } } },
+  });
+  const hasMore = rows.length > take;
+  const items = hasMore ? rows.slice(0, take) : rows;
+  const nextCursor = hasMore ? items[items.length - 1].id : null;
+
+  // Distinct list of action types in this workspace for the filter chips.
+  const actionsGroup = await prisma.auditEvent.groupBy({
+    by: ["action"],
+    where: { workspaceId: ws.id },
+    _count: true,
+    orderBy: { _count: { action: "desc" } },
+    take: 24,
+  });
+  const actions = actionsGroup.map((g) => ({ action: g.action, count: g._count }));
+
+  return { items, nextCursor, actions };
+}
+
 export async function getWorkspaceSummary(slug: string) {
   const ws = await prisma.workspace.findUnique({
     where: { slug },
