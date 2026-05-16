@@ -11,6 +11,17 @@ export interface KindMeta {
   urlHelp: string;
   /** Regex the URL must match for create. Empty = no client-side validation. */
   urlPattern?: string;
+  /**
+   * Additional JSON-shaped credentials beyond the URL. When present the UI
+   * shows a labelled textarea below the URL field. The server parses the
+   * value as JSON and stores the merged object as the encrypted credentials
+   * blob.
+   */
+  extraField?: {
+    label: string;
+    placeholder: string;
+    help: string;
+  };
 }
 
 export const SUPPORTED_KINDS: KindMeta[] = [
@@ -41,15 +52,29 @@ export const SUPPORTED_KINDS: KindMeta[] = [
   {
     id: "BIGQUERY",
     label: "BigQuery",
-    available: false,
-    urlPlaceholder: "needs OAuth — service account JSON",
-    urlHelp: "Coming soon: drop a service-account JSON key with BigQuery Data Viewer.",
+    available: true,
+    urlPlaceholder: "bigquery://PROJECT_ID[/DATASET]",
+    urlHelp: "Project ID required (e.g. acme-analytics-prod). Optional default dataset.",
+    urlPattern: "^bigquery://",
+    extraField: {
+      label: "Service-account JSON key",
+      placeholder:
+        '{\n  "type": "service_account",\n  "project_id": "acme-analytics-prod",\n  "private_key": "-----BEGIN PRIVATE KEY-----\\n...\\n-----END PRIVATE KEY-----\\n",\n  "client_email": "openkpi@acme.iam.gserviceaccount.com"\n}',
+      help: "Paste the full JSON key from Google Cloud IAM. Needs BigQuery Data Viewer + Job User roles.",
+    },
   },
   {
     id: "POWERBI",
     label: "Power BI (metadata)",
-    available: false,
-    urlPlaceholder: "needs Azure AD app registration",
-    urlHelp: "Coming soon: imports measure metadata from a Power BI workspace.",
+    available: true,
+    urlPlaceholder: "powerbi://TENANT_ID[/WORKSPACE_ID]",
+    urlHelp: "Tenant ID is your Azure AD tenant GUID. Optional workspace ID to scope.",
+    urlPattern: "^powerbi://",
+    extraField: {
+      label: "Service principal credentials",
+      placeholder:
+        '{\n  "tenantId": "11111111-2222-3333-4444-555555555555",\n  "clientId": "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee",\n  "clientSecret": "your-app-secret"\n}',
+      help: "Azure AD app with Power BI Tenant.Read.All permission, added to the workspace as Member/Admin.",
+    },
   },
 ];

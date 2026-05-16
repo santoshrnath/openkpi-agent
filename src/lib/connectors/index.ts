@@ -5,6 +5,8 @@ import { Connector, ConnectorKind } from "./types";
 import { PostgresConnector } from "./postgres";
 import { SnowflakeConnector, SnowflakeCredentials } from "./snowflake";
 import { MssqlConnector, MssqlCredentials } from "./mssql";
+import { BigQueryConnector, BigQueryCredentials } from "./bigquery";
+import { PowerBIConnector, PowerBICredentials } from "./powerbi";
 
 export { SUPPORTED_KINDS } from "./kinds";
 
@@ -35,14 +37,20 @@ export function makeConnector(row: {
       const creds = decryptJson<MssqlCredentials>(row.credentialsCipher);
       return new MssqlConnector(creds);
     }
-    case "BIGQUERY":
+    case "BIGQUERY": {
+      const creds = decryptJson<BigQueryCredentials>(row.credentialsCipher);
+      return new BigQueryConnector(creds);
+    }
+    case "POWERBI": {
+      const creds = decryptJson<PowerBICredentials>(row.credentialsCipher);
+      return new PowerBIConnector(creds);
+    }
     case "SALESFORCE":
     case "COUPA":
     case "WORKDAY":
-    case "POWERBI":
     case "SAP":
       throw new Error(
-        `${kind} connector is on the roadmap. Postgres, Snowflake, and SQL Server are supported today.`
+        `${kind} connector is on the roadmap. Postgres, Snowflake, SQL Server, BigQuery, and Power BI are supported today.`
       );
     case "CSV":
     case "EXCEL":

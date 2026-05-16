@@ -18,8 +18,11 @@ export default function NewConnectionPage() {
   const [kind, setKind] = useState("POSTGRES");
   const [name, setName] = useState("");
   const [url, setUrl] = useState("");
+  const [extraJson, setExtraJson] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const meta = SUPPORTED_KINDS.find((k) => k.id === kind);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,7 +32,7 @@ export default function NewConnectionPage() {
       const res = await fetch(`/api/workspaces/${slug}/connections`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ kind, name, url }),
+        body: JSON.stringify({ kind, name, url, extraJson: extraJson || undefined }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail ?? data.error ?? `Request failed (${res.status})`);
@@ -104,20 +107,40 @@ export default function NewConnectionPage() {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             required
-            placeholder={SUPPORTED_KINDS.find((k) => k.id === kind)?.urlPlaceholder ?? ""}
+            placeholder={meta?.urlPlaceholder ?? ""}
             style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 12 }}
           />
           <span className={styles.hint}>
-            {SUPPORTED_KINDS.find((k) => k.id === kind)?.urlHelp}{" "}
+            {meta?.urlHelp}{" "}
             Use a <strong>read-only role</strong>.
           </span>
         </div>
+
+        {meta?.extraField && (
+          <div className={styles.field}>
+            <span className={styles.label}>{meta.extraField.label}</span>
+            <textarea
+              className="input"
+              value={extraJson}
+              onChange={(e) => setExtraJson(e.target.value)}
+              required
+              placeholder={meta.extraField.placeholder}
+              rows={8}
+              style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 11.5, resize: "vertical" }}
+            />
+            <span className={styles.hint}>{meta.extraField.help}</span>
+          </div>
+        )}
 
         <div className={styles.actions}>
           <Link href={`${base}/connections`} className="btn btn-ghost">
             ← Back
           </Link>
-          <button type="submit" className="btn btn-primary" disabled={submitting || !name || !url}>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={submitting || !name || !url || (!!meta?.extraField && !extraJson.trim())}
+          >
             {submitting ? "Testing…" : <><Check size={14} /> Test &amp; save</>}
           </button>
         </div>
