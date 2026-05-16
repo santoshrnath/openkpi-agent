@@ -43,14 +43,40 @@ function toConfig(raw: MssqlCredentials): mssql.config {
   }
   if (!raw.url) throw new Error("Missing MSSQL credentials");
 
-  // The mssql package's connection-string parser accepts:
-  //   mssql://user:password@host:1433/db?encrypt=true
-  //   sqlserver://user:password@host:1433/db?encrypt=true
-  // We normalise to mssql:// so the parser is consistent.
-  let url = raw.url;
-  if (url.startsWith("sqlserver://")) url = "mssql://" + url.slice("sqlserver://".length);
-  // The mssql library expects { connectionString } AS the entire arg.
-  return { connectionString: url } as unknown as mssql.config;
+  // mssql v11 doesn't accept a raw connection string via {connectionString}
+  // when passed to new ConnectionPool() — it returns "config.server is
+  // required". Parse the URL ourselves into the typed config the package
+  // wants. Accepts mssql:// and sqlserver:// prefixes.
+  let normalised = raw.url;
+  if (normalised.startsWith("sqlserver://")) {
+    normalised = "mssql://" + normalised.slice("sqlserver://".length);
+  }
+  let u: URL;
+  try {
+    u = new URL(normalised);
+  } catch (e) {
+    throw new Error(
+      `Invalid MSSQL URL — expected mssql://user:password@host:1433/db?encrypt=true (${
+        e instanceof Error ? e.message : String(e)
+      })`
+    );
+  }
+  const params = u.searchParams;
+  const encryptParam = params.get("encrypt");
+  const trustParam = params.get("trustServerCertificate");
+  return {
+    server: u.hostname,
+    port: u.port ? Number(u.port) : 1433,
+    user: decodeURIComponent(u.username),
+    password: decodeURIComponent(u.password),
+    database: u.pathname.replace(/^\//, "") || undefined,
+    options: {
+      encrypt: encryptParam === null ? true : encryptParam !== "false",
+      trustServerCertificate: trustParam === "true",
+    },
+    connectionTimeout: 10_000,
+    requestTimeout: 10_000,
+  } as mssql.config;
 }
 
 /**

@@ -129,3 +129,55 @@
   font-size: 12px;
   color: rgb(var(--text-soft));
 }
+
+.checkCell {
+  width: 32px;
+  padding-left: 14px;
+}
+.checkbox {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: rgb(var(--accent));
+}
+.bulkBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 16px;
+  margin-bottom: 14px;
+  background: rgb(var(--accent-soft));
+  border: 1px solid rgb(var(--accent) / 0.3);
+  border-radius: 12px;
+  font-size: 13px;
+  color: rgb(var(--accent));
+  font-weight: 500;
+}
+.bulkActions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.bulkActions button {
+  font-size: 12px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  background: rgb(var(--surface));
+  color: rgb(var(--text));
+  border: 1px solid rgb(var(--border));
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.bulkActions button:hover {
+  background: rgb(var(--surface-2));
+  border-color: rgb(var(--accent) / 0.4);
+}
+.bulkActions button:disabled { opacity: 0.6; cursor: not-allowed; }
+.bulkClear {
+  background: transparent !important;
+  border-color: transparent !important;
+  color: rgb(var(--accent)) !important;
+}
