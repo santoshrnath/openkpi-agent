@@ -293,6 +293,10 @@ body {
 ::-webkit-scrollbar-track { background: transparent; }
 
 /* ---- Tiny layout helpers ---------------------------------------------- */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 .kpi-up   { color: rgb(5,150,105); }
 .kpi-down { color: rgb(225,29,72); }
 [data-theme="dark"]   .kpi-up,

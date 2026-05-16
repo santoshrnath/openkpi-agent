@@ -21,6 +21,7 @@ import { ConfidenceDial } from "@/components/ui/ConfidenceDial";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { formatKPIValue } from "@/lib/utils";
 import { cx } from "@/lib/utils";
+import { relativeTime } from "@/lib/schedule";
 import { KPI } from "@/types";
 import styles from "./KpiDetailView.module.css";
 
@@ -31,9 +32,13 @@ interface Props {
   kpi: KPI;
   aiHint: string;
   isLive?: boolean;
+  /** ISO string when set — only present for connector-backed KPIs */
+  lastRefreshIso?: string | null;
+  /** ISO of the next scheduled auto-refresh, or null for manual cadence */
+  nextDueIso?: string | null;
 }
 
-export function KpiDetailView({ workspaceSlug, kpi, aiHint, isLive }: Props) {
+export function KpiDetailView({ workspaceSlug, kpi, aiHint, isLive, lastRefreshIso, nextDueIso }: Props) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Overview");
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
@@ -79,14 +84,51 @@ export function KpiDetailView({ workspaceSlug, kpi, aiHint, isLive }: Props) {
             <span>Source: {kpi.sourceSystem}</span>
             <span>·</span>
             <span>Refresh: {kpi.refreshFrequency}</span>
+            {isLive && lastRefreshIso && (
+              <>
+                <span>·</span>
+                <span style={{ color: "rgb(5,150,105)" }}>
+                  ● Last refresh {relativeTime(new Date(lastRefreshIso))}
+                </span>
+              </>
+            )}
+            {isLive && nextDueIso && (
+              <>
+                <span>·</span>
+                <span style={{ color: "rgb(var(--text-soft))" }}>
+                  Next auto-tick {relativeTime(new Date(nextDueIso))}
+                </span>
+              </>
+            )}
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           {isLive && (
-            <button onClick={refresh} disabled={refreshing} className="btn btn-soft">
-              <RefreshCw size={14} style={refreshing ? { animation: "spin 1s linear infinite" } : undefined} />
-              {refreshing ? "Refreshing…" : "Refresh now"}
-            </button>
+            <>
+              <select
+                defaultValue={kpi.refreshFrequency}
+                onChange={async (e) => {
+                  const v = e.target.value;
+                  const r = await fetch(`/api/workspaces/${workspaceSlug}/kpis/${kpi.id}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ refreshFrequency: v }),
+                  });
+                  if (r.ok) router.refresh();
+                }}
+                title="Auto-refresh cadence"
+                className="input"
+                style={{ width: "auto", padding: "8px 10px", fontSize: 12 }}
+              >
+                {["Real-time","Every 5 minutes","Every 15 minutes","Every hour","Daily","Weekly","Monthly","Quarterly","Manual"].map((o) => (
+                  <option key={o} value={o}>{o}</option>
+                ))}
+              </select>
+              <button onClick={refresh} disabled={refreshing} className="btn btn-soft">
+                <RefreshCw size={14} style={refreshing ? { animation: "spin 1s linear infinite" } : undefined} />
+                {refreshing ? "Refreshing…" : "Refresh now"}
+              </button>
+            </>
           )}
           <Link href={`${base}/lineage?kpi=${kpi.id}`} className="btn btn-ghost">
             <Layers size={14} /> View lineage
