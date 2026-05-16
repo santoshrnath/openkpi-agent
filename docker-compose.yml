@@ -57,6 +57,8 @@ services:
       - AZURE_OPENAI_DEPLOYMENT=${AZURE_OPENAI_DEPLOYMENT:-}
       # ---- Database -----------------------------------------------------
       - DATABASE_URL=${DATABASE_URL:-}
+      # ---- Connector credential encryption (AES-256-GCM key, base64) ----
+      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-}
       # ---- NextAuth -----------------------------------------------------
       - NEXTAUTH_URL=${NEXTAUTH_URL:-https://openstudio.oneplaceplatform.com}
       - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-}

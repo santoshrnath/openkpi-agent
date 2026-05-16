@@ -11,6 +11,8 @@ import {
   Code2,
   Settings,
   Info,
+  Database,
+  Upload,
 } from "lucide-react";
 import { cx } from "@/lib/utils";
 import { useTheme } from "@/components/providers/ThemeProvider";
@@ -19,6 +21,8 @@ import styles from "./Sidebar.module.css";
 const NAV = [
   { suffix: "", label: "Command Center", icon: LayoutDashboard, exact: true },
   { suffix: "/catalog", label: "KPI Catalog", icon: BookMarked },
+  { suffix: "/connections", label: "Data Sources", icon: Database },
+  { suffix: "/import", label: "Import CSV", icon: Upload },
   { suffix: "/lineage", label: "Lineage Map", icon: Workflow },
   { suffix: "/explainer", label: "AI Explainer", icon: Sparkles },
   { suffix: "/brief", label: "Executive Brief", icon: FileText },

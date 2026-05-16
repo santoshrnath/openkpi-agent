@@ -12,8 +12,10 @@ import {
   Clock,
   Layers,
   AlertCircle,
+  RefreshCw,
 } from "lucide-react";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { TrendChart } from "@/components/charts/TrendChart";
 import { ConfidenceDial } from "@/components/ui/ConfidenceDial";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -28,11 +30,31 @@ interface Props {
   workspaceSlug: string;
   kpi: KPI;
   aiHint: string;
+  isLive?: boolean;
 }
 
-export function KpiDetailView({ workspaceSlug, kpi, aiHint }: Props) {
+export function KpiDetailView({ workspaceSlug, kpi, aiHint, isLive }: Props) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Overview");
+  const [refreshing, setRefreshing] = useState(false);
+  const router = useRouter();
   const base = `/w/${workspaceSlug}`;
+
+  async function refresh() {
+    setRefreshing(true);
+    try {
+      const r = await fetch(`/api/workspaces/${workspaceSlug}/kpis/${kpi.id}/refresh`, {
+        method: "POST",
+      });
+      if (!r.ok) {
+        const data = await r.json().catch(() => ({}));
+        alert(data.detail ?? data.error ?? `Refresh failed (${r.status})`);
+      } else {
+        router.refresh();
+      }
+    } finally {
+      setRefreshing(false);
+    }
+  }
 
   return (
     <>
@@ -60,6 +82,12 @@ export function KpiDetailView({ workspaceSlug, kpi, aiHint }: Props) {
           </div>
         </div>
         <div style={{ display: "flex", gap: 8 }}>
+          {isLive && (
+            <button onClick={refresh} disabled={refreshing} className="btn btn-soft">
+              <RefreshCw size={14} style={refreshing ? { animation: "spin 1s linear infinite" } : undefined} />
+              {refreshing ? "Refreshing…" : "Refresh now"}
+            </button>
+          )}
           <Link href={`${base}/lineage?kpi=${kpi.id}`} className="btn btn-ghost">
             <Layers size={14} /> View lineage
           </Link>
