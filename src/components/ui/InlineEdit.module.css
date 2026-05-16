@@ -1,0 +1,55 @@
+.wrap {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  min-width: 0;
+}
+.display {
+  cursor: text;
+  border-radius: 6px;
+  padding: 4px 6px;
+  margin: -4px -6px;
+  border: 1px dashed transparent;
+  transition: border-color 0.12s ease, background 0.12s ease;
+  width: 100%;
+  white-space: pre-wrap;
+}
+.display:hover {
+  border-color: rgb(var(--border));
+  background: rgb(var(--surface-2));
+}
+.display.locked { cursor: not-allowed; }
+.display.locked:hover { border-color: transparent; background: transparent; }
+
+.editor {
+  width: 100%;
+  background: rgb(var(--surface));
+  border: 1px solid rgb(var(--accent));
+  border-radius: 8px;
+  padding: 6px 10px;
+  font: inherit;
+  color: rgb(var(--text));
+  box-shadow: 0 0 0 3px rgb(var(--accent) / 0.15);
+}
+.editor:focus { outline: none; }
+
+.code .editor, .code .display {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 12px;
+}
+
+.status {
+  display: inline-flex;
+  align-items: center;
+  font-size: 11px;
+  margin-left: 4px;
+}
+.statusSaving { color: rgb(var(--text-soft)); }
+.statusSaved  { color: rgb(5,150,105); }
+.statusError  { color: rgb(190,18,60); }
+
+.empty {
+  color: rgb(var(--text-soft));
+  font-style: italic;
+}

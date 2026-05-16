@@ -3,6 +3,7 @@ import { getKpiBySlug } from "@/lib/queries";
 import { dbKpiToUi } from "@/lib/adapters";
 import { generateMockAIResponse } from "@/lib/mockAI";
 import { nextRefreshAt } from "@/lib/schedule";
+import { getWorkspaceAccess } from "@/lib/acl";
 import { KpiDetailView } from "@/components/views/KpiDetailView";
 
 export const dynamic = "force-dynamic";
@@ -21,6 +22,8 @@ export default async function KpiDetail({
   const lastRefreshIso = dbKpi.lastRefresh ? dbKpi.lastRefresh.toISOString() : null;
   const nextDue = nextRefreshAt(dbKpi.lastRefresh, dbKpi.refreshFrequency);
   const nextDueIso = nextDue ? nextDue.toISOString() : null;
+  const access = await getWorkspaceAccess(params.slug);
+  const canEdit = access?.canEdit ?? false;
   return (
     <KpiDetailView
       workspaceSlug={params.slug}
@@ -29,6 +32,7 @@ export default async function KpiDetail({
       isLive={isLive}
       lastRefreshIso={lastRefreshIso}
       nextDueIso={nextDueIso}
+      canEdit={canEdit}
     />
   );
 }

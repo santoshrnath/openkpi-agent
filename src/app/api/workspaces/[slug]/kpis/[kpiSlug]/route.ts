@@ -25,6 +25,9 @@ const PatchBody = z.object({
   owner: z.string().max(120).optional(),
   definition: z.string().max(4000).optional(),
   limitations: z.string().max(4000).optional(),
+  formula: z.string().max(20_000).optional(),
+  sourceSystem: z.string().max(120).optional(),
+  whyMoved: z.string().max(4000).optional(),
 });
 
 export async function PATCH(

@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 import { TrendChart } from "@/components/charts/TrendChart";
 import { ConfidenceDial } from "@/components/ui/ConfidenceDial";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { InlineText, InlineTextarea } from "@/components/ui/InlineEdit";
 import { formatKPIValue } from "@/lib/utils";
 import { cx } from "@/lib/utils";
 import { relativeTime } from "@/lib/schedule";
@@ -37,9 +38,11 @@ interface Props {
   lastRefreshIso?: string | null;
   /** ISO of the next scheduled auto-refresh, or null for manual cadence */
   nextDueIso?: string | null;
+  /** Viewer is a member with at least EDITOR role. */
+  canEdit?: boolean;
 }
 
-export function KpiDetailView({ workspaceSlug, kpi, aiHint, isLive, lastRefreshIso, nextDueIso }: Props) {
+export function KpiDetailView({ workspaceSlug, kpi, aiHint, isLive, lastRefreshIso, nextDueIso, canEdit }: Props) {
   const [tab, setTab] = useState<(typeof TABS)[number]>("Overview");
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
@@ -83,6 +86,19 @@ export function KpiDetailView({ workspaceSlug, kpi, aiHint, isLive, lastRefreshI
   }
 
   const needsDocs = !kpi.definition || !kpi.formula || !kpi.limitations;
+
+  async function patch(payload: Record<string, unknown>) {
+    const r = await fetch(`/api/workspaces/${workspaceSlug}/kpis/${kpi.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!r.ok) {
+      const data = await r.json().catch(() => ({}));
+      throw new Error(data.detail ?? data.error ?? `Update failed (${r.status})`);
+    }
+    router.refresh();
+  }
 
   return (
     <>
@@ -187,24 +203,49 @@ export function KpiDetailView({ workspaceSlug, kpi, aiHint, isLive, lastRefreshI
         <div className={`card ${styles.metaCard}`}>
           <div className={styles.metaRow}>
             <div className={styles.metaLabel}>Definition</div>
-            <div className={styles.metaValue}>{kpi.definition}</div>
+            <div className={styles.metaValue}>
+              <InlineTextarea
+                value={kpi.definition}
+                readOnly={!canEdit}
+                placeholder="Click to add a business definition…"
+                onSave={(v) => patch({ definition: v })}
+              />
+            </div>
           </div>
           <div className={styles.metaRow}>
             <div className={styles.metaLabel}>Formula</div>
-            <div className={styles.metaValue}><code>{kpi.formula}</code></div>
+            <div className={styles.metaValue}>
+              <InlineTextarea
+                value={kpi.formula}
+                readOnly={!canEdit}
+                code
+                placeholder="Click to add the calculation…"
+                onSave={(v) => patch({ formula: v })}
+              />
+            </div>
           </div>
           <div className={styles.metaRow}>
             <div className={styles.metaLabel}>Source System</div>
-            <div className={styles.metaValue}>
-              <Database size={12} style={{ display: "inline", marginRight: 6 }} />
-              {kpi.sourceSystem}
+            <div className={styles.metaValue} style={{ display: "flex", alignItems: "center" }}>
+              <Database size={12} style={{ marginRight: 6, flexShrink: 0 }} />
+              <InlineText
+                value={kpi.sourceSystem}
+                readOnly={!canEdit}
+                placeholder="Where does this data come from?"
+                onSave={(v) => patch({ sourceSystem: v })}
+              />
             </div>
           </div>
           <div className={styles.metaRow}>
             <div className={styles.metaLabel}>Data Owner</div>
-            <div className={styles.metaValue}>
-              <Users size={12} style={{ display: "inline", marginRight: 6 }} />
-              {kpi.owner}
+            <div className={styles.metaValue} style={{ display: "flex", alignItems: "center" }}>
+              <Users size={12} style={{ marginRight: 6, flexShrink: 0 }} />
+              <InlineText
+                value={kpi.owner}
+                readOnly={!canEdit}
+                placeholder="Who is accountable?"
+                onSave={(v) => patch({ owner: v })}
+              />
             </div>
           </div>
           <div className={styles.metaRow}>
@@ -234,7 +275,12 @@ export function KpiDetailView({ workspaceSlug, kpi, aiHint, isLive, lastRefreshI
             <div className={styles.metaLabel}>Known limitations</div>
             <div className={styles.metaValue} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
               <AlertCircle size={14} style={{ color: "rgb(217,119,6)", marginTop: 2, flexShrink: 0 }} />
-              <span>{kpi.limitations}</span>
+              <InlineTextarea
+                value={kpi.limitations}
+                readOnly={!canEdit}
+                placeholder="What does this KPI not capture?"
+                onSave={(v) => patch({ limitations: v })}
+              />
             </div>
           </div>
         </div>
@@ -259,9 +305,16 @@ export function KpiDetailView({ workspaceSlug, kpi, aiHint, isLive, lastRefreshI
 
           <div className={`card ${styles.insight}`}>
             <div className={styles.insightIcon}><Lightbulb size={18} /></div>
-            <div>
+            <div style={{ flex: 1, minWidth: 0 }}>
               <div className={styles.insightTitle}>Why did this move?</div>
-              <div className={styles.insightText}>{kpi.whyMoved}</div>
+              <div className={styles.insightText}>
+                <InlineTextarea
+                  value={kpi.whyMoved}
+                  readOnly={!canEdit}
+                  placeholder="Click to add commentary on this period's movement…"
+                  onSave={(v) => patch({ whyMoved: v })}
+                />
+              </div>
             </div>
           </div>
         </div>
