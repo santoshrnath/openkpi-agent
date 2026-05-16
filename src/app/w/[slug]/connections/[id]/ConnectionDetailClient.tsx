@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Play, Save, ArrowRight, ListTree, Trash2 } from "lucide-react";
 import styles from "../page.module.css";
+import { AiQueryChat } from "./AiQueryChat";
 
 interface QueryResult {
   columns: { name: string; type: string }[];
@@ -135,15 +136,30 @@ export function ConnectionDetailClient({
   const firstCell = firstRow ? Object.values(firstRow)[0] : null;
   const firstCellIsNumeric = firstCell != null && Number.isFinite(Number(firstCell));
 
+  const editorRef = useRef<HTMLTextAreaElement | null>(null);
+
+  function handleUseAiSql(generated: string) {
+    setSql(generated);
+    setQueryResult(null);
+    setQueryErr(null);
+    setTimeout(() => {
+      editorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      editorRef.current?.focus();
+    }, 0);
+  }
+
   return (
     <div className={styles.detailLayout}>
       <div>
-        <div className="card" style={{ padding: 20 }}>
+        <AiQueryChat apiBase={apiBase} onUseSql={handleUseAiSql} />
+
+        <div className="card" style={{ padding: 20, marginTop: 20 }}>
           <h3 style={{ fontSize: 14, marginBottom: 10 }}>
             <Play size={14} style={{ display: "inline", marginRight: 6, color: "rgb(var(--accent))" }} />
             Query — must return one row with a numeric first column
           </h3>
           <textarea
+            ref={editorRef}
             className={styles.sqlEditor}
             value={sql}
             onChange={(e) => setSql(e.target.value)}
