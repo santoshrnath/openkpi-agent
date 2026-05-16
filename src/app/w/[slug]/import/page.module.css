@@ -1,0 +1,208 @@
+.shell {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+@media (min-width: 1100px) {
+  .shell { grid-template-columns: minmax(0,1fr) 360px; }
+}
+
+.dropzone {
+  padding: 40px;
+  border: 2px dashed rgb(var(--border));
+  border-radius: 16px;
+  background: rgb(var(--surface));
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.dropzone.active {
+  border-color: rgb(var(--accent));
+  background: rgb(var(--accent-soft));
+}
+.dropzone h3 {
+  font-size: 18px;
+  margin-bottom: 6px;
+  color: rgb(var(--text));
+}
+.dropzone p {
+  color: rgb(var(--text-muted));
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+.iconWrap {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  background: rgb(var(--accent-soft));
+  color: rgb(var(--accent));
+  display: grid;
+  place-items: center;
+  margin: 0 auto 14px;
+}
+.fileInput {
+  display: none;
+}
+.smallActions {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgb(var(--text-soft));
+}
+
+.docs {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.docsTitle {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgb(var(--text-soft));
+}
+.field {
+  font-size: 12.5px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgb(var(--border-soft));
+}
+.field:last-child { border-bottom: none; }
+.fieldKey {
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-weight: 600;
+  color: rgb(var(--text));
+}
+.required {
+  font-size: 10px;
+  color: rgb(225,29,72);
+  margin-left: 6px;
+  font-weight: 600;
+}
+.fieldDoc {
+  color: rgb(var(--text-muted));
+  margin-top: 2px;
+  line-height: 1.5;
+}
+
+.result {
+  padding: 24px;
+}
+.resultHead {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.resultIcon {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  background: rgba(16,185,129,0.15);
+  color: rgb(5,150,105);
+}
+.resultIconErr {
+  background: rgba(225,29,72,0.15);
+  color: rgb(190,18,60);
+}
+.resultTitle {
+  font-size: 18px;
+  font-weight: 700;
+  color: rgb(var(--text));
+}
+.resultSub {
+  font-size: 13px;
+  color: rgb(var(--text-muted));
+}
+.statRow {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 16px 0;
+}
+.statCell {
+  background: rgb(var(--surface-2));
+  border-radius: 10px;
+  padding: 14px;
+  text-align: center;
+}
+.statVal {
+  font-size: 22px;
+  font-weight: 700;
+  color: rgb(var(--text));
+}
+.statLabel {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgb(var(--text-soft));
+}
+
+.errors {
+  max-height: 240px;
+  overflow-y: auto;
+  border: 1px solid rgb(var(--border-soft));
+  border-radius: 10px;
+  background: rgb(var(--surface-2));
+  margin-bottom: 14px;
+}
+.errorRow {
+  padding: 10px 12px;
+  font-size: 12px;
+  border-bottom: 1px solid rgb(var(--border-soft));
+  display: flex;
+  gap: 10px;
+}
+.errorRow:last-child { border-bottom: none; }
+.errorRowNum {
+  font-family: ui-monospace, monospace;
+  color: rgb(var(--text-soft));
+  min-width: 50px;
+}
+.errorRowMsg {
+  color: rgb(var(--text));
+}
+.errorField {
+  font-family: ui-monospace, monospace;
+  color: rgb(190,18,60);
+  margin-right: 6px;
+}
+
+.warn {
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  background: rgba(245,158,11,0.10);
+  border: 1px solid rgba(245,158,11,0.25);
+  border-radius: 10px;
+  font-size: 12.5px;
+  color: rgb(180,83,9);
+}
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: rgb(var(--text-soft));
+}
+
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgb(var(--accent-soft));
+  border-top-color: rgb(var(--accent));
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

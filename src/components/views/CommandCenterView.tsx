@@ -106,11 +106,10 @@ export function CommandCenterView({
           </div>
           <div className={styles.bannerText}>
             <span className={styles.bannerStrong}>This workspace is empty.</span>{" "}
-            Upload a CSV/Excel of your KPI definitions to populate it, or connect a
-            data source.
+            Upload a CSV of your KPI definitions to populate it.
           </div>
-          <Link href={`${baseHref}/settings`} className="btn btn-soft btn-sm">
-            Get started
+          <Link href={`${baseHref}/import`} className="btn btn-soft btn-sm">
+            Upload CSV
           </Link>
         </div>
       )}
