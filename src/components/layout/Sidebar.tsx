@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { cx } from "@/lib/utils";
 import { useTheme } from "@/components/providers/ThemeProvider";
+import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 import styles from "./Sidebar.module.css";
 
 const NAV = [
@@ -62,6 +63,8 @@ export function Sidebar() {
           </div>
         )}
       </div>
+
+      {!compact && <WorkspaceSwitcher />}
 
       <nav className={styles.nav}>
         {NAV.map((item) => {

@@ -42,7 +42,16 @@ interface Props {
   workspaceTagline?: string | null;
   kpis: KPI[];
   canEdit?: boolean;
+  isSignedIn?: boolean;
+  /** Set when the viewer was redirected here from an edit-only route. */
+  bouncedFrom?: string;
 }
+
+const BOUNCE_LABEL: Record<string, string> = {
+  import: "uploading a CSV",
+  connection: "creating a connection",
+  member: "inviting a member",
+};
 
 export function CommandCenterView({
   workspaceSlug,
@@ -50,6 +59,8 @@ export function CommandCenterView({
   workspaceTagline,
   kpis,
   canEdit,
+  isSignedIn,
+  bouncedFrom,
 }: Props) {
   const { settings } = useTheme();
   const router = useRouter();
@@ -134,20 +145,37 @@ export function CommandCenterView({
         }
       />
 
-      {kpis.length === 0 && canEdit && (
-        <Onboarding workspaceSlug={workspaceSlug} workspaceName={workspaceName} />
-      )}
-
-      {kpis.length === 0 && !canEdit && (
+      {/* Read-only state: viewer can browse but can't edit. Triggered when
+          (a) anon is viewing a PUBLIC workspace, or
+          (b) signed-in user isn't a member of this workspace.
+          Loudest variant when the viewer was just bounced from an edit route. */}
+      {!canEdit && (
         <div className={styles.banner}>
           <div className={styles.bannerIcon}>
             <Upload size={16} />
           </div>
           <div className={styles.bannerText}>
-            <span className={styles.bannerStrong}>This workspace is empty.</span>{" "}
-            Sign in as a member to populate it.
+            {bouncedFrom && (
+              <div style={{ fontSize: 12, color: "rgb(190,18,60)", marginBottom: 2, fontWeight: 600 }}>
+                You can&apos;t {BOUNCE_LABEL[bouncedFrom] ?? "edit"} here — this isn&apos;t your workspace.
+              </div>
+            )}
+            <span className={styles.bannerStrong}>Read-only view.</span>{" "}
+            {isSignedIn
+              ? "You're signed in but not a member of this workspace — click 'New workspace' in the sidebar to create your own, or ask the admin for an invite."
+              : "Sign in (top-right) and create your own workspace to upload KPIs and connect data sources."}
           </div>
+          <Link
+            href={isSignedIn ? "/w/new" : "/login"}
+            className="btn btn-soft btn-sm"
+          >
+            {isSignedIn ? "Create workspace" : "Sign in"}
+          </Link>
         </div>
+      )}
+
+      {kpis.length === 0 && canEdit && (
+        <Onboarding workspaceSlug={workspaceSlug} workspaceName={workspaceName} />
       )}
 
       {kpis.length > 0 && undocumented > 0 && (
