@@ -3,6 +3,8 @@ import { SourceKind } from "@prisma/client";
 import { decryptJson } from "@/lib/crypto";
 import { Connector, ConnectorKind } from "./types";
 import { PostgresConnector } from "./postgres";
+import { SnowflakeConnector, SnowflakeCredentials } from "./snowflake";
+import { MssqlConnector, MssqlCredentials } from "./mssql";
 
 export { SUPPORTED_KINDS } from "./kinds";
 
@@ -25,8 +27,14 @@ export function makeConnector(row: {
       const creds = decryptJson<{ url: string }>(row.credentialsCipher);
       return new PostgresConnector(creds);
     }
-    case "MSSQL":
-    case "SNOWFLAKE":
+    case "SNOWFLAKE": {
+      const creds = decryptJson<SnowflakeCredentials>(row.credentialsCipher);
+      return new SnowflakeConnector(creds);
+    }
+    case "MSSQL": {
+      const creds = decryptJson<MssqlCredentials>(row.credentialsCipher);
+      return new MssqlConnector(creds);
+    }
     case "BIGQUERY":
     case "SALESFORCE":
     case "COUPA":
@@ -34,7 +42,7 @@ export function makeConnector(row: {
     case "POWERBI":
     case "SAP":
       throw new Error(
-        `${kind} connector is on the roadmap. Postgres is supported today.`
+        `${kind} connector is on the roadmap. Postgres, Snowflake, and SQL Server are supported today.`
       );
     case "CSV":
     case "EXCEL":

@@ -3,6 +3,8 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { encryptJson } from "@/lib/crypto";
 import { PostgresConnector } from "@/lib/connectors/postgres";
+import { SnowflakeConnector } from "@/lib/connectors/snowflake";
+import { MssqlConnector } from "@/lib/connectors/mssql";
 import { gateView, gateEdit } from "@/lib/acl";
 
 export const runtime = "nodejs";
@@ -31,14 +33,15 @@ export async function GET(_req: NextRequest, { params }: { params: { slug: strin
 
 // ─── POST — create + test ────────────────────────────────────────────────────
 const CreateBody = z.object({
-  kind: z.literal("POSTGRES"), // expand as we add connectors
+  kind: z.enum(["POSTGRES", "SNOWFLAKE", "MSSQL"]),
   name: z.string().min(1).max(80),
-  url: z
-    .string()
-    .min(20)
-    .max(2000)
-    .refine((s) => /^postgres(ql)?:\/\//.test(s), "Must be a postgres:// URL"),
-});
+  url: z.string().min(15).max(2000),
+}).refine((b) => {
+  if (b.kind === "POSTGRES") return /^postgres(ql)?:\/\//.test(b.url);
+  if (b.kind === "SNOWFLAKE") return /^snowflake:\/\//.test(b.url);
+  if (b.kind === "MSSQL") return /^(mssql|sqlserver):\/\//.test(b.url);
+  return false;
+}, { message: "URL does not match the selected source type" });
 
 export async function POST(req: NextRequest, { params }: { params: { slug: string } }) {
   const gate = await gateEdit(params.slug);
@@ -54,7 +57,11 @@ export async function POST(req: NextRequest, { params }: { params: { slug: strin
   }
 
   // Test the connection BEFORE persisting the credentials.
-  const probe = await new PostgresConnector({ url: body.url }).test();
+  const connector =
+    body.kind === "POSTGRES"  ? new PostgresConnector({ url: body.url })
+  : body.kind === "SNOWFLAKE" ? new SnowflakeConnector({ url: body.url })
+                              : new MssqlConnector({ url: body.url });
+  const probe = await connector.test();
   if (!probe.ok) {
     return NextResponse.json(
       { error: "Connection failed", detail: probe.message, latencyMs: probe.latencyMs },

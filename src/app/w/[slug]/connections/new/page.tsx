@@ -104,11 +104,12 @@ export default function NewConnectionPage() {
             value={url}
             onChange={(e) => setUrl(e.target.value)}
             required
-            placeholder="postgresql://user:password@host:5432/dbname?sslmode=require"
+            placeholder={SUPPORTED_KINDS.find((k) => k.id === kind)?.urlPlaceholder ?? ""}
             style={{ fontFamily: "ui-monospace, Menlo, monospace", fontSize: 12 }}
           />
           <span className={styles.hint}>
-            Use a <strong>read-only role</strong>. We wrap every query in a read-only transaction as defence-in-depth, but least-privilege is the right pattern.
+            {SUPPORTED_KINDS.find((k) => k.id === kind)?.urlHelp}{" "}
+            Use a <strong>read-only role</strong>.
           </span>
         </div>
 
