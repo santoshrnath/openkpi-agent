@@ -1,0 +1,212 @@
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  color: rgb(var(--text-soft));
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: var(--card-gap, 16px);
+  margin-bottom: 24px;
+}
+@media (min-width: 700px) { .summary { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1100px) { .summary { grid-template-columns: repeat(4, 1fr); } }
+
+.cell { padding: 18px; }
+.label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgb(var(--text-soft));
+  font-weight: 600;
+}
+.value {
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: rgb(var(--text));
+  margin-top: 8px;
+  line-height: 1;
+}
+.delta {
+  margin-top: 8px;
+  font-size: 12px;
+  color: rgb(var(--text-soft));
+}
+.tone-good   { color: rgb(5,150,105); }
+.tone-warn   { color: rgb(180,83,9); }
+.tone-danger { color: rgb(190,18,60); }
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+@media (min-width: 1100px) { .layout { grid-template-columns: minmax(0,1fr) 360px; } }
+
+.section { padding: 22px; }
+.sectionHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.sectionTitle {
+  font-size: 14px;
+  font-weight: 600;
+  color: rgb(var(--text));
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.sectionCount {
+  font-size: 12px;
+  color: rgb(var(--text-soft));
+}
+
+.staleTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.staleTable th {
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgb(var(--text-soft));
+  padding: 8px 12px;
+  border-bottom: 1px solid rgb(var(--border-soft));
+}
+.staleTable td {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgb(var(--border-soft));
+  vertical-align: middle;
+}
+.staleTable tr:last-child td { border-bottom: 0; }
+.staleTable a { color: rgb(var(--text)); font-weight: 600; }
+.staleTable a:hover { color: rgb(var(--accent)); }
+.cadence {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgb(var(--surface-2));
+  color: rgb(var(--text-muted));
+  display: inline-block;
+}
+.overdue {
+  color: rgb(190,18,60);
+  font-weight: 600;
+}
+
+.gapsList {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.gapRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: rgb(var(--surface-2));
+  border-radius: 10px;
+  font-size: 13px;
+}
+.gapCount {
+  font-weight: 700;
+  font-size: 18px;
+  color: rgb(var(--text));
+}
+.gapLabel { color: rgb(var(--text-muted)); }
+.gapPct {
+  font-size: 11px;
+  color: rgb(var(--text-soft));
+  margin-left: 8px;
+}
+
+/* Certification mix donut */
+.donut {
+  width: 160px;
+  height: 160px;
+  margin: 0 auto 14px;
+  position: relative;
+}
+.donutCenter {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  text-align: center;
+}
+.donutTotal {
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: rgb(var(--text));
+  line-height: 1;
+}
+.donutLabel {
+  font-size: 11px;
+  color: rgb(var(--text-soft));
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin-top: 2px;
+}
+.legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.legendItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  font-size: 12.5px;
+}
+.legendDot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  margin-right: 8px;
+  vertical-align: middle;
+}
+
+.failuresList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.failureRow {
+  padding: 12px;
+  background: rgba(225,29,72,0.06);
+  border: 1px solid rgba(225,29,72,0.22);
+  border-radius: 10px;
+  font-size: 12.5px;
+}
+.failureRow strong {
+  color: rgb(190,18,60);
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+}
+.failureRow .when {
+  font-size: 11px;
+  color: rgb(var(--text-soft));
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+.empty {
+  padding: 24px;
+  text-align: center;
+  color: rgb(var(--text-muted));
+  font-size: 13px;
+}

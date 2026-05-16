@@ -103,6 +103,57 @@ export async function listAuditEvents(opts: AuditQuery) {
   return { items, nextCursor, actions };
 }
 
+/**
+ * Pull everything the Workspace Health page needs in a small fixed set of
+ * queries. Keeps render time bounded even on large catalogues.
+ */
+export async function getWorkspaceHealth(slug: string) {
+  const ws = await prisma.workspace.findUnique({ where: { slug } });
+  if (!ws) return null;
+
+  const since24h = new Date(Date.now() - 24 * 60 * 60 * 1000);
+
+  const [kpis, recentFailures, recentRefreshes24h] = await Promise.all([
+    prisma.kpi.findMany({
+      where: { workspaceId: ws.id },
+      select: {
+        id: true,
+        slug: true,
+        name: true,
+        status: true,
+        domain: true,
+        refreshFrequency: true,
+        lastRefresh: true,
+        confidenceScore: true,
+        owner: true,
+        sourceSystem: true,
+        definition: true,
+        formula: true,
+        limitations: true,
+        connectionId: true,
+      },
+    }),
+    prisma.auditEvent.findMany({
+      where: {
+        workspaceId: ws.id,
+        action: "kpi.refresh.auto.failed",
+        createdAt: { gt: since24h },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 25,
+    }),
+    prisma.auditEvent.count({
+      where: {
+        workspaceId: ws.id,
+        action: "kpi.refresh.auto",
+        createdAt: { gt: since24h },
+      },
+    }),
+  ]);
+
+  return { workspace: ws, kpis, recentFailures, recentRefreshes24h };
+}
+
 export async function getWorkspaceSummary(slug: string) {
   const ws = await prisma.workspace.findUnique({
     where: { slug },

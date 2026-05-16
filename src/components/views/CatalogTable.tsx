@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Minus, CheckCircle2, FileEdit, AlertTriangle, X } from "lucide-react";
 import { KpiStatusMenu } from "@/components/kpi/KpiStatusMenu";
 import { InlineText } from "@/components/ui/InlineEdit";
 import { formatChange, formatKPIValue } from "@/lib/utils";
@@ -49,11 +49,54 @@ export function CatalogTable({ workspaceSlug, kpis, canEdit }: Props) {
   const router = useRouter();
   const [sortKey, setSortKey] = useState<SortKey>("confidence");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const rows = useMemo(() => {
     const sign = sortDir === "asc" ? 1 : -1;
     return [...kpis].sort((a, b) => sign * compare(a, b, sortKey));
   }, [kpis, sortKey, sortDir]);
+
+  function toggle(slug: string) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(slug)) next.delete(slug);
+      else next.add(slug);
+      return next;
+    });
+  }
+  function toggleAll() {
+    setSelected((prev) => {
+      if (prev.size === rows.length) return new Set();
+      return new Set(rows.map((r) => r.id));
+    });
+  }
+  function clearSelection() { setSelected(new Set()); }
+
+  async function bulkChangeStatus(dbValue: string, label: string) {
+    if (selected.size === 0) return;
+    if (!confirm(`Set ${selected.size} KPI${selected.size === 1 ? "" : "s"} to ${label}?`)) return;
+    setBulkBusy(true);
+    try {
+      // Fire in parallel; ignore partial failures with a summary alert at end.
+      const results = await Promise.allSettled(
+        Array.from(selected).map((slug) =>
+          fetch(`/api/workspaces/${workspaceSlug}/kpis/${slug}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ status: dbValue }),
+          }).then((r) => (r.ok ? r : Promise.reject(r)))
+        )
+      );
+      const ok = results.filter((r) => r.status === "fulfilled").length;
+      const fail = results.length - ok;
+      if (fail > 0) alert(`${ok} updated, ${fail} failed. Reload and retry the failures.`);
+      clearSelection();
+      router.refresh();
+    } finally {
+      setBulkBusy(false);
+    }
+  }
 
   function clickHeader(key: SortKey) {
     if (key === sortKey) {
@@ -80,12 +123,49 @@ export function CatalogTable({ workspaceSlug, kpis, canEdit }: Props) {
   }
 
   const base = `/w/${workspaceSlug}`;
+  const allChecked = rows.length > 0 && selected.size === rows.length;
+  const someChecked = selected.size > 0 && !allChecked;
 
   return (
-    <div className={`card ${styles.scroller}`}>
+    <>
+      {canEdit && selected.size > 0 && (
+        <div className={styles.bulkBar}>
+          <span>
+            {selected.size} KPI{selected.size === 1 ? "" : "s"} selected
+          </span>
+          <div className={styles.bulkActions}>
+            <button onClick={() => bulkChangeStatus("CERTIFIED", "Certified")} disabled={bulkBusy}>
+              <CheckCircle2 size={12} /> Certify
+            </button>
+            <button onClick={() => bulkChangeStatus("DRAFT", "Draft")} disabled={bulkBusy}>
+              <FileEdit size={12} /> Mark Draft
+            </button>
+            <button onClick={() => bulkChangeStatus("NEEDS_REVIEW", "Needs Review")} disabled={bulkBusy}>
+              <AlertTriangle size={12} /> Needs Review
+            </button>
+            <button onClick={clearSelection} className={styles.bulkClear}>
+              <X size={12} /> Clear
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className={`card ${styles.scroller}`}>
       <table className={styles.table}>
         <thead>
           <tr>
+            {canEdit && (
+              <th className={cx(styles.th, styles.checkCell, styles.thStatic)}>
+                <input
+                  type="checkbox"
+                  className={styles.checkbox}
+                  checked={allChecked}
+                  ref={(el) => { if (el) el.indeterminate = someChecked; }}
+                  onChange={toggleAll}
+                  aria-label="Select all rows"
+                />
+              </th>
+            )}
             {COLUMNS.map((col) => {
               const isSorted = col.sortable && col.key === sortKey;
               return (
@@ -126,6 +206,17 @@ export function CatalogTable({ workspaceSlug, kpis, canEdit }: Props) {
 
             return (
               <tr key={kpi.id} className={styles.row}>
+                {canEdit && (
+                  <td className={cx(styles.cell, styles.checkCell)}>
+                    <input
+                      type="checkbox"
+                      className={styles.checkbox}
+                      checked={selected.has(kpi.id)}
+                      onChange={() => toggle(kpi.id)}
+                      aria-label={`Select ${kpi.name}`}
+                    />
+                  </td>
+                )}
                 <td className={cx(styles.cell, styles.nameCell)}>
                   <Link href={`${base}/catalog/${kpi.id}`} className={styles.linkAway}>
                     <div className={styles.kpiName}>{kpi.name}</div>
@@ -186,6 +277,7 @@ export function CatalogTable({ workspaceSlug, kpis, canEdit }: Props) {
           })}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }
