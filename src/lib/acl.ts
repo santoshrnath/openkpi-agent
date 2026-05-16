@@ -49,20 +49,37 @@ export async function getViewer(): Promise<Viewer> {
     const fullName = [c.firstName, c.lastName].filter(Boolean).join(" ") || null;
     const image = c.imageUrl ?? null;
 
+    // First-time provisioning is race-prone: Next.js fires the layout and
+    // page in parallel, so two requests both see "no user with this clerkId"
+    // and both try to create. Strategy:
+    //   1. Atomically claim any legacy row with this email and no clerkId
+    //   2. If something was claimed, re-read by clerkId
+    //   3. Otherwise create; if create races and hits P2002, re-read.
     if (email) {
-      const existing = await prisma.user.findUnique({ where: { email } });
-      if (existing) {
-        user = await prisma.user.update({
-          where: { id: existing.id },
-          data: { clerkId, name: existing.name ?? fullName, image: existing.image ?? image },
-        });
+      const linked = await prisma.user.updateMany({
+        where: { email, clerkId: null },
+        data: {
+          clerkId,
+          name: fullName ?? undefined,
+          image: image ?? undefined,
+        },
+      });
+      if (linked.count > 0) {
+        user = await prisma.user.findUnique({ where: { clerkId } });
       }
     }
 
     if (!user) {
-      user = await prisma.user.create({
-        data: { clerkId, email, name: fullName, image },
-      });
+      try {
+        user = await prisma.user.create({
+          data: { clerkId, email, name: fullName, image },
+        });
+      } catch (e) {
+        if ((e as { code?: string }).code === "P2002") {
+          user = await prisma.user.findUnique({ where: { clerkId } });
+        }
+        if (!user) throw e;
+      }
     }
   }
 
